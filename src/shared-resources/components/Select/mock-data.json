@@ -1,0 +1,84 @@
+[
+  {
+    "value": 1,
+    "label": "Lory, rainbow"
+  },
+  {
+    "value": 2,
+    "label": "Chital",
+    "isDisabled": true
+  },
+  {
+    "value": 3,
+    "label": "Parrot, hawk-headed",
+    "isDisabled": true
+  },
+  {
+    "value": 4,
+    "label": "Dove, rock"
+  },
+  {
+    "value": 5,
+    "label": "Egyptian goose"
+  },
+  {
+    "value": 6,
+    "label": "Bustard, stanley"
+  },
+  {
+    "value": 7,
+    "label": "Cow, scottish highland"
+  },
+  {
+    "value": 8,
+    "label": "Cow, scottish highland"
+  },
+  {
+    "value": 9,
+    "label": "Badger, european"
+  },
+  {
+    "value": 10,
+    "label": "Bleu, blue-breasted cordon"
+  },
+  {
+    "value": 11,
+    "label": "Red-billed hornbill"
+  },
+  {
+    "value": 12,
+    "label": "Russian dragonfly"
+  },
+  {
+    "value": 13,
+    "label": "Spur-winged goose"
+  },
+  {
+    "value": 14,
+    "label": "Cormorant, great"
+  },
+  {
+    "value": 15,
+    "label": "Pintail, white-cheeked"
+  },
+  {
+    "value": 16,
+    "label": "Monkey, vervet"
+  },
+  {
+    "value": 17,
+    "label": "Yellow mongoose"
+  },
+  {
+    "value": 18,
+    "label": "Wambenger, red-tailed"
+  },
+  {
+    "value": 19,
+    "label": "Tern, white-winged black"
+  },
+  {
+    "value": 20,
+    "label": "Greater adjutant stork"
+  }
+]

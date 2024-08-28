@@ -1,0 +1,24 @@
+.spinner-xs {
+  @apply h-5;
+  @apply w-5;
+}
+
+.spinner-sm {
+  @apply h-10;
+  @apply w-10;
+}
+
+.spinner-md {
+  @apply h-[3.75rem];
+  @apply w-[3.75rem];
+}
+
+.spinner-lg {
+  @apply h-20;
+  @apply w-20;
+}
+
+.spinner-xl {
+  @apply h-[6.25rem];
+  @apply w-[6.25rem];
+}
