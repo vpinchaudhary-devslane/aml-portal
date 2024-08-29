@@ -5,7 +5,6 @@ import ENV_CONFIG from 'constant/env.config';
 import App from './App';
 
 if (ENV_CONFIG.APP_ENV !== 'development') {
-  // eslint-disable-next line no-console
   console.log = () => {};
 }
 
