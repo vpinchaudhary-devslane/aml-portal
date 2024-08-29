@@ -22,4 +22,4 @@ jobs:
       - name: Run test cases
         run: |
           yarn install
-          yarn run lint
+          yarn run lint:ci
