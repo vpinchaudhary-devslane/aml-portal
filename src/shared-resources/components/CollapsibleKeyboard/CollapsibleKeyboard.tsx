@@ -13,7 +13,7 @@ type Props = {
 }
 
 const CollapsibleKeyboard: React.FC<Props> = ({onBackSpaceClick, onKeyClick}) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const toggleExpanded = () => setExpanded(!expanded);
 
