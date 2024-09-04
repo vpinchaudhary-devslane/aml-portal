@@ -25,14 +25,12 @@ const CollapsibleKeyboard: React.FC<Props> = ({onBackSpaceClick, onKeyClick}) =>
 
   return (
     <div
-      className={cx('transition-all ease-in-out relative', {
-        'h-[128px] max-w-[73px]': !expanded,
-        'h-[379px] w-[389px]': expanded,
-      })}
+      className='transition-all ease-in-out relative h-[379px] w-[389px] overflow-hidden'
     >
       <IconButton
-        className={cx('!p-0 absolute top-1/2 right-0 -translate-y-1/2', {
+        className={cx('!p-0 absolute top-1/2 -translate-y-1/2', {
           '!hidden': expanded,
+          '-right-[calc(100%-73px)]': !expanded,
         })}
         disableRipple
         onClick={toggleExpanded}
@@ -42,9 +40,10 @@ const CollapsibleKeyboard: React.FC<Props> = ({onBackSpaceClick, onKeyClick}) =>
 
       <div
         className={cx(
-          'bg-disabled relative w-full h-full rounded-tl-[20px] rounded-bl-[20px] flex justify-between py-[30px] pl-[38px] pr-[17px]',
+          'bg-disabled absolute w-full h-full rounded-tl-[20px] rounded-bl-[20px] flex justify-between items-center py-[30px] pl-[38px] pr-[17px]',
           {
-            hidden: !expanded,
+            'right-0': expanded,
+            '-right-full hidden': !expanded,
           }
         )}
       >
@@ -56,7 +55,7 @@ const CollapsibleKeyboard: React.FC<Props> = ({onBackSpaceClick, onKeyClick}) =>
         </div>
 
         <IconButton
-          className={cx('!p-0')}
+          className={cx('!p-0 h-fit')}
           disableRipple
           onClick={toggleExpanded}
         >
