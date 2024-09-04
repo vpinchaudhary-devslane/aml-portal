@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
 import cx from 'classnames';
 import KeyboardClosedStateIcon from '../../icons/KeyboardClosedStateIcon';
 import ArrowRight from '../../icons/ArrowRight';
+import KeyboardButton from './KeyboardButton';
+import { KEYBOARD_KEYS } from '../../../constant/constants';
+import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
 
-const CollapsibleKeyboard: React.FC = () => {
-  const [expanded, setExpanded] = useState(false);
+type Props = {
+  onKeyClick?: (key: string) => void;
+  onBackSpaceClick?: () => void;
+}
+
+const CollapsibleKeyboard: React.FC<Props> = ({onBackSpaceClick, onKeyClick}) => {
+  const [expanded, setExpanded] = useState(true);
 
   const toggleExpanded = () => setExpanded(!expanded);
+
+  const keyboardKeys = useMemo(() => {
+    return KEYBOARD_KEYS.map(key => (
+      <KeyboardButton onClick={() => onKeyClick?.(key)}>{key}</KeyboardButton>
+    ))
+  }, [])
 
   return (
     <div
@@ -34,8 +48,11 @@ const CollapsibleKeyboard: React.FC = () => {
           }
         )}
       >
-        <div>
-          <span>Keyboard keys</span>
+        <div className='grid grid-cols-3 gap-2.5'>
+          {keyboardKeys}
+          <KeyboardButton onClick={() => onBackSpaceClick?.()}>
+            <BackspaceOutlinedIcon className='text-[#49454F] !text-4xl' />
+          </KeyboardButton>
         </div>
 
         <IconButton

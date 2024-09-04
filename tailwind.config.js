@@ -8,7 +8,11 @@ module.exports = {
         disabled: '#D9D9D9',
         purple: '#b400ff',
         error: '#d32f2f',
-      }
+        keyboardButtonActiveBg: '#6A6A6A'
+      },
+      fontFamily: {
+        quicksand: ['"Quicksand"', "sans-serif"],
+      },
     }
   }
 }
