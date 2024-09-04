@@ -5,7 +5,7 @@ import MatModal from '@mui/material/Modal';
 import Fade from '@mui/material/Fade';
 import IconButton from '@mui/material/IconButton';
 import cx from 'classnames';
-import CloseIcon from '../Icons/CloseIcon';
+import CloseIcon from '@mui/icons-material/Close';
 
 type Props = {
   open: boolean;
@@ -42,8 +42,8 @@ const Modal: React.FC<Props> = ({
           className
         )}
       >
-        <IconButton className='!absolute right-2 top-2 !p-0' onClick={onClose}>
-          <CloseIcon />
+        <IconButton className='!absolute right-4 top-4 !p-0' onClick={onClose}>
+          <CloseIcon className='!h-[18px] !w-[18px] text-black' />
         </IconButton>
         <div className='flex flex-col gap-3'>
           {heading && <p className='text-2xl font-bold'>{heading}</p>}
