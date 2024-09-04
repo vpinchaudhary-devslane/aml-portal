@@ -1,0 +1,31 @@
+.MuiInputBase-root {
+  @apply px-2 py-2;
+  input {
+    @apply h-[45px] p-0 shrink-0 text-[36px];
+  }
+  fieldset {
+    @apply border-black border-2 rounded-[12px];
+  }
+}
+
+.text-align-center {
+  .MuiInputBase-root {
+    input {
+      @apply text-center;
+    }
+  }
+}
+
+.Mui-focused:not(.Mui-error) {
+  fieldset {
+    @apply border-primary #{!important};
+  }
+}
+
+.single-character-input {
+  .Mui-focused:not(.Mui-error) {
+    fieldset {
+      @apply border-purple #{!important};
+    }
+  }
+}
