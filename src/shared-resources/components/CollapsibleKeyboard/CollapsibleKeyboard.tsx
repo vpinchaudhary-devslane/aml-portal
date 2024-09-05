@@ -10,23 +10,27 @@ import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
 type Props = {
   onKeyClick?: (key: string) => void;
   onBackSpaceClick?: () => void;
-}
+};
 
-const CollapsibleKeyboard: React.FC<Props> = ({onBackSpaceClick, onKeyClick}) => {
+const CollapsibleKeyboard: React.FC<Props> = ({
+  onBackSpaceClick,
+  onKeyClick,
+}) => {
   const [expanded, setExpanded] = useState(false);
 
   const toggleExpanded = () => setExpanded(!expanded);
 
   const keyboardKeys = useMemo(() => {
-    return KEYBOARD_KEYS.map(key => (
-      <KeyboardButton onClick={() => onKeyClick?.(key)}>{key}</KeyboardButton>
-    ))
-  }, [])
+    return KEYBOARD_KEYS.map((key) => (
+      <KeyboardButton key={key} onClick={() => onKeyClick?.(key)}>
+        {key}
+      </KeyboardButton>
+    ));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div
-      className='transition-all ease-in-out relative h-[379px] w-[389px] overflow-hidden'
-    >
+    <div className='transition-all ease-in-out relative h-[379px] w-[389px] overflow-hidden'>
       <IconButton
         className={cx('!p-0 absolute top-1/2 -translate-y-1/2', {
           '!hidden': expanded,
