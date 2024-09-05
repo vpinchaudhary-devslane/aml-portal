@@ -26,3 +26,5 @@ const FormikToggleButtonGroup: React.FC<FormikToggleButtonGroupProps> = (
     />
   );
 };
+
+export default FormikToggleButtonGroup;
