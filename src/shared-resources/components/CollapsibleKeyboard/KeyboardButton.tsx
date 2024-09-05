@@ -7,15 +7,13 @@ type Props = {
   onClick?: () => void;
 };
 
-const KeyboardButton: React.FC<Props> = ({ children, onClick }) => {
-  return (
-    <Button
-      className='keyboard-button !h-[75px] !w-[70px] !border-none !bg-white !text-black !text-4xl font-semibold !font-quicksand'
-      onClick={onClick}
-    >
-      {children}
-    </Button>
-  );
-};
+const KeyboardButton: React.FC<Props> = ({ children, onClick }) => (
+  <Button
+    className='keyboard-button !h-[75px] !w-[70px] !border-none !bg-white !text-black !text-4xl font-semibold !font-quicksand'
+    onClick={onClick}
+  >
+    {children}
+  </Button>
+);
 
 export default KeyboardButton;

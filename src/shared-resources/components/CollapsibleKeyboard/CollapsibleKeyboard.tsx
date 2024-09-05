@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
+import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
 import cx from 'classnames';
 import KeyboardClosedStateIcon from '../../icons/KeyboardClosedStateIcon';
 import ArrowRight from '../../icons/ArrowRight';
 import KeyboardButton from './KeyboardButton';
 import { KEYBOARD_KEYS } from '../../../constant/constants';
-import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
 
 type Props = {
   onKeyClick?: (key: string) => void;
@@ -20,14 +20,16 @@ const CollapsibleKeyboard: React.FC<Props> = ({
 
   const toggleExpanded = () => setExpanded(!expanded);
 
-  const keyboardKeys = useMemo(() => {
-    return KEYBOARD_KEYS.map((key) => (
-      <KeyboardButton key={key} onClick={() => onKeyClick?.(key)}>
-        {key}
-      </KeyboardButton>
-    ));
+  const keyboardKeys = useMemo(
+    () =>
+      KEYBOARD_KEYS.map((key) => (
+        <KeyboardButton key={key} onClick={() => onKeyClick?.(key)}>
+          {key}
+        </KeyboardButton>
+      )),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    []
+  );
 
   return (
     <div className='transition-all ease-in-out relative h-[379px] w-[389px] overflow-hidden'>
