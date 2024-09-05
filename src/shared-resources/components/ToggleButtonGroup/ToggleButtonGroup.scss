@@ -1,0 +1,5 @@
+.toggle-btn-group {
+  .Mui-selected {
+    @apply bg-primary text-white border-none py-2.5 #{!important};
+  }
+}
