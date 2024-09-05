@@ -32,7 +32,7 @@ const CollapsibleKeyboard: React.FC<Props> = ({
   );
 
   return (
-    <div className='transition-all ease-in-out relative h-[379px] w-[389px] overflow-hidden'>
+    <div className='relative h-[379px] w-[389px] overflow-hidden'>
       <IconButton
         className={cx('!p-0 absolute top-1/2 -translate-y-1/2', {
           '!hidden': expanded,
@@ -46,10 +46,10 @@ const CollapsibleKeyboard: React.FC<Props> = ({
 
       <div
         className={cx(
-          'bg-disabled absolute w-full h-full rounded-tl-[20px] rounded-bl-[20px] flex justify-between items-center py-[30px] pl-[38px] pr-[17px]',
+          'bg-disabled absolute top-1/2 -translate-y-1/2 w-full h-full rounded-tl-[20px] rounded-bl-[20px] flex justify-between items-center py-[30px] pl-[38px] pr-[17px] transition-all duration-300 ease-in',
           {
-            'right-0': expanded,
-            '-right-full hidden': !expanded,
+            'translate-x-0': expanded,
+            'translate-x-full': !expanded,
           }
         )}
       >
