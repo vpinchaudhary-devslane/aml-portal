@@ -1,0 +1,14 @@
+.profile-with-menu {
+  .MuiPaper-root {
+    @apply w-[200px] mt-[3px] px-0 py-2 -translate-x-[10px] bg-[#A7C0FF] #{!important};
+    @apply shadow-[0px_1px_2px_0px_rgba(0,0,0,0.30),0px_2px_6px_2px_rgba(0,0,0,0.15)];
+
+    ul {
+      @apply p-0;
+
+      li {
+        @apply py-2 px-3 h-12 text-base font-normal;
+      }
+    }
+  }
+}
