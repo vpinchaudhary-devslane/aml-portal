@@ -21,7 +21,7 @@ const Button: React.FC<Props> = ({
     type={type}
     onClick={onClick}
     className={cx(
-      '!h-[72px] !w-56 !border-4 !border-solid !shadow-none !rounded-[10px] !text-2xl !font-bold active:opacity-[46%]',
+      '!h-[72px] !w-56 !border-4 !border-solid !shadow-none !rounded-[10px] !text-2xl !font-bold active:opacity-[46%] !font-quicksand',
       disabled ? '!bg-disabled' : '!bg-primary',
       className
     )}

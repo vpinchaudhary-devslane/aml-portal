@@ -22,7 +22,7 @@ const ToggleButtonGroup: React.FC<ToggleButtonGroupProps> = ({
         <MatToggleButton
           key={option}
           value={option}
-          className='w-[236px] !py-2 !border-2 !m-0 !border-black !rounded-2xl !text-4xl !font-semibold !text-black'
+          className='w-[236px] !py-2 !border-2 !m-0 !border-black !rounded-2xl !text-4xl !font-semibold !text-black !font-publicSans'
           disableRipple
         >
           {option}
