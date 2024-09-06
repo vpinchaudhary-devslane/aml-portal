@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
 import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import cx from 'classnames';
 import KeyboardClosedStateIcon from '../../icons/KeyboardClosedStateIcon';
-import ArrowRight from '../../icons/ArrowRight';
 import KeyboardButton from './KeyboardButton';
 import { KEYBOARD_KEYS } from '../../../constant/constants';
 
@@ -65,7 +65,7 @@ const CollapsibleKeyboard: React.FC<Props> = ({
           disableRipple
           onClick={toggleExpanded}
         >
-          <ArrowRight />
+          <PlayArrowRoundedIcon className='!h-16 !w-16 !text-keyboardButtonActiveBg' />
         </IconButton>
       </div>
     </div>
