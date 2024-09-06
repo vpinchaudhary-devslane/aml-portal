@@ -1,0 +1,8 @@
+.keyboard-button {
+  &:active {
+    @apply bg-[#6A6A6A] opacity-100 text-white #{!important};
+    svg {
+      @apply text-white #{!important};
+    }
+  }
+}
