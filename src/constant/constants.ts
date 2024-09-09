@@ -11,3 +11,5 @@ export const KEYBOARD_KEYS = [
   '.',
   '0',
 ];
+
+export const DIGIT_PLACES = ['U', 'T', 'H', 'Th', 'TTh', 'L', 'TL', 'C', 'TC'];
