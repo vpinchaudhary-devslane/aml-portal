@@ -8,7 +8,8 @@ module.exports = {
         disabled: '#D9D9D9',
         purple: '#b400ff',
         error: '#d32f2f',
-        keyboardButtonActiveBg: '#6A6A6A'
+        keyboardButtonActiveBg: '#6A6A6A',
+        headingTextColor: '#333F61',
       },
       fontFamily: {
         quicksand: ['"Quicksand"', "sans-serif"],
