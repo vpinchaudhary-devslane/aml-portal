@@ -46,7 +46,9 @@ const Modal: React.FC<Props> = ({
           <CloseIcon className='!h-[18px] !w-[18px] text-black' />
         </IconButton>
         <div className='flex flex-col gap-3'>
-          {heading && <p className='text-2xl font-bold'>{heading}</p>}
+          {heading && (
+            <p className='text-2xl font-bold font-roboto'>{heading}</p>
+          )}
           <div>{children}</div>
         </div>
       </Box>

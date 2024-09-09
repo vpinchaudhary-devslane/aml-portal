@@ -12,6 +12,8 @@ module.exports = {
       },
       fontFamily: {
         quicksand: ['"Quicksand"', "sans-serif"],
+        publicSans: ['"Public Sans"', "sans-serif"],
+        roboto: ['"Roboto"', "sans-serif"],
       },
     }
   }

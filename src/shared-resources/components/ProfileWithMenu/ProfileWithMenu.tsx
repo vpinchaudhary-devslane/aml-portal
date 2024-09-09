@@ -26,7 +26,7 @@ const ProfileWithMenu: React.FC<Props> = ({ onLogout, user }) => {
   return (
     <>
       <div className='flex gap-3.5 justify-center items-center'>
-        <div className='flex flex-col items-end gap-2 text-base font-medium'>
+        <div className='flex flex-col items-end gap-2 text-base font-medium font-roboto'>
           <p className='max-w-[182px] truncate'>
             {getUserFullName(user)?.toUpperCase()}
           </p>
