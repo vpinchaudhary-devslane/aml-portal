@@ -2,6 +2,7 @@ import { CSSProperties, ChangeEvent } from 'react';
 
 export interface InputProps {
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   placeholder?: string;
   label?: string;
   helperText?: string;

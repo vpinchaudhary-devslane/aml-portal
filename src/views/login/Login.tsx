@@ -23,8 +23,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className='pt-[87px] pb-[84px] pl-[60px] pr-[109px] flex flex-col'>
-      <p className='text-4xl font-semibold text-headingTextColor pt-[23px] pb-[22px] px-[7px]'>
+    <div className='flex flex-col'>
+      <p className='text-4xl font-semibold text-headingTextColor ml-[60px] pt-[23px] pb-[22px] px-[7px]'>
         Welcome to Assisted Math Learning
       </p>
 
@@ -35,6 +35,8 @@ const Login: React.FC = () => {
           email: yup.string().email().required('Email is required'),
           password: yup.string().required('Password is required'),
         })}
+        validateOnChange={false} // This disables validation on change
+        validateOnBlur // This enables validation on blur
       >
         {(formikProps) => {
           const areFieldsEmpty =
@@ -43,19 +45,19 @@ const Login: React.FC = () => {
           return (
             <Form>
               <div className='flex gap-[85px] items-end'>
-                <div className='w-[962px] h-3/5 p-20 border-[1px] border-black mt-[61px] flex flex-col gap-[59px] items-center'>
+                <div className='w-[962px] h-3/5 p-20 border-[1px] ml-[60px] border-black mt-[61px] flex flex-col gap-[59px] items-center'>
                   <p className='text-4xl font-semibold text-headingTextColor pt-[23px] pb-[22px] text-center'>
                     LOGIN
                   </p>
                   <div className='flex flex-col gap-[34px]'>
                     <div className='flex gap-4 items-start'>
-                      <p className='text-2xl text-headingTextColor translate-y-1/2'>
+                      <p className='text-2xl w-36 text-headingTextColor translate-y-1/2'>
                         USERNAME
                       </p>
                       <FormikInput name='email' className='w-[236px]' />
                     </div>
                     <div className='flex gap-4 items-start'>
-                      <p className='text-2xl text-headingTextColor  translate-y-1/2'>
+                      <p className='text-2xl w-36 text-headingTextColor  translate-y-1/2'>
                         PASSWORD
                       </p>
                       <FormikInput

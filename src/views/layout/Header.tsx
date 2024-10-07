@@ -9,7 +9,7 @@ type Props = {
 };
 
 const Header: React.FC<Props> = ({ user }) => (
-  <div className='h-[120px] p-[26px] border-b-[1px] border-black flex justify-between'>
+  <div className='p-4 border-b-[1px] border-black flex justify-between'>
     <div className='flex gap-4 items-center'>
       <img
         src='/assets/logo.svg'
