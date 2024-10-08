@@ -1,11 +1,13 @@
 import produce from 'immer';
 import { Reducer } from 'redux';
 import { AuthActionType } from 'store/actions/actions.constants';
+import { User } from '../../models/entities/User';
 
 export interface AuthState {
   userID?: number;
   loading?: boolean;
   error?: string;
+  user?: User;
 }
 
 const initialState: AuthState = {};

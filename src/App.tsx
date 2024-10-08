@@ -1,38 +1,51 @@
-import React, { useState } from 'react';
+import React, { Suspense } from 'react';
 import { Provider } from 'react-redux';
 import store from 'store';
-import ProblemGrid from './shared-resources/components/ProblemGrid/ProblemGrid';
+import { ErrorBoundary } from 'react-error-boundary';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { errorBoundaryHelper } from './utils/helpers/errorBoundary.helper';
+import ErrorFallbackComponent from './utils/components/ErrorFallbackComponent';
+import Loader from './shared-resources/components/Loader/Loader';
+import RouteWrapper from './RouteWrapper';
+import Layout from './views/layout/layout';
+import { LAYOUT_ROUTES } from './routes';
+import AuthenticatedRouteHOC from './HOC/AuthenticatedRoute';
+import UnauthenticatedRouteHOC from './HOC/UnauthenticatedRoute';
+import Login from './views/login/Login';
+import AML404Component from './utils/components/AML404Component';
 
-const App: React.FC = () => {
-  const [problemSolution, setProblemSolution] = useState({});
-  return (
-    <Provider store={store}>
-      <div className='h-full'>
-        <h1>Welcome to AML Portal!</h1>
-        <div className='mt-80 ml-80'>
-          <ProblemGrid
-            problem={[
-              ['$', '_', '_', '_', '_', '$'],
-              ['$', '2', '3', '2', '2', '6'],
-              ['+', '2', '5', '2', '6', '2'],
-              ['_', '_', '_', '_', '_', '_'],
-            ]}
-            problemSolution={problemSolution}
-            onInputValueChange={(val, rowIndex, colIndex) => {
-              const clonedSolution: any = { ...problemSolution };
-              const key = `${rowIndex}_${colIndex}`;
-              if (val) {
-                clonedSolution[key] = val;
-              } else {
-                delete clonedSolution[key];
-              }
-              setProblemSolution(clonedSolution);
-            }}
-          />
-        </div>
-      </div>
-    </Provider>
-  );
-};
+const App: React.FC = () => (
+  <Provider store={store}>
+    <ErrorBoundary
+      FallbackComponent={ErrorFallbackComponent}
+      onError={errorBoundaryHelper}
+    >
+      <Suspense fallback={<Loader />}>
+        <BrowserRouter>
+          <RouteWrapper>
+            <Routes>
+              <Route path='/' element={<Layout />}>
+                {LAYOUT_ROUTES.map((route) => (
+                  <Route
+                    path={route.path}
+                    key={route.key}
+                    Component={
+                      route.component && AuthenticatedRouteHOC(route.component)
+                    }
+                  />
+                ))}
+                <Route
+                  path='/login'
+                  Component={UnauthenticatedRouteHOC(Login)}
+                />
+                <Route path='*' Component={AML404Component} />
+              </Route>
+            </Routes>
+          </RouteWrapper>
+        </BrowserRouter>
+      </Suspense>
+    </ErrorBoundary>
+  </Provider>
+);
 
 export default App;

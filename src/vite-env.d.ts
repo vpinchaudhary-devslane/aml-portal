@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_BACKEND_URL: string;
   readonly VITE_APP_ENV: 'development' | 'staging' | 'production';
+  readonly VITE_APP_VERSION: string;
 }
 
 interface ImportMeta {
