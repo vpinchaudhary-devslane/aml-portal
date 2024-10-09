@@ -1,6 +1,9 @@
 import { Entity, EntityIdentifier } from 'models/entity';
 
 export interface EntityState<T extends Entity = Entity> {
-  entities: { [id: EntityIdentifier]: T };
+  entities: { [key: EntityIdentifier]: T };
   currentId?: EntityIdentifier;
+  loadingList?: boolean;
+  loadingOne?: boolean;
+  error?: string;
 }

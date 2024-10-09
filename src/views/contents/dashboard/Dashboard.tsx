@@ -1,5 +1,26 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
 
-const Dashboard: React.FC = () => <p>Dashboard here!</p>;
+const DashboardC: React.FC = () => {
+  const navigate = useNavigate();
 
-export default Dashboard;
+  const handleStartClick = () => {
+    navigate('/instructions');
+  };
+
+  return (
+    <ContainerLayout
+      headerText='Hello, Nivedha Shivaraman'
+      content={
+        <span className='text-4xl font-semibold text-headingTextColor'>
+          Press Start to Begin
+        </span>
+      }
+      buttonText='Start'
+      onButtonClick={handleStartClick}
+    />
+  );
+};
+
+export default DashboardC;

@@ -3,6 +3,9 @@ import { Provider } from 'react-redux';
 import store from 'store';
 import { ErrorBoundary } from 'react-error-boundary';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import DashboardC from 'views/contents/dashboard/Dashboard';
+import Instructions from 'views/contents/dashboard/Instructions';
+import Questions from 'views/contents/dashboard/Questions';
 import { errorBoundaryHelper } from './utils/helpers/errorBoundary.helper';
 import ErrorFallbackComponent from './utils/components/ErrorFallbackComponent';
 import Loader from './shared-resources/components/Loader/Loader';
@@ -38,6 +41,9 @@ const App: React.FC = () => (
                   path='/login'
                   Component={UnauthenticatedRouteHOC(Login)}
                 />
+                <Route path='/app' Component={DashboardC} />
+                <Route path='/instructions' Component={Instructions} />
+                <Route path='/questions' Component={Questions} />
                 <Route path='*' Component={AML404Component} />
               </Route>
             </Routes>

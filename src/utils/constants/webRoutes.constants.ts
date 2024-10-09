@@ -5,4 +5,10 @@ export const webRoutes: any = {
   dashboard: {
     root: () => '/',
   },
+  instructions: {
+    root: () => '/',
+  },
+  questions: {
+    root: () => '/',
+  },
 };
