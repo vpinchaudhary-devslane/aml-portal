@@ -1,6 +1,7 @@
+import { Description } from '@mui/icons-material';
 import React, { useEffect, useState, useRef } from 'react';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
-import Grid1Question from 'shared-resources/components/Grid1Question';
+import GridQuestion from 'shared-resources/components/Grid1Question';
 import Loader from 'shared-resources/components/Loader/Loader';
 
 const Questions: React.FC = () => {
@@ -10,6 +11,10 @@ const Questions: React.FC = () => {
     {
       topAnswer: string[];
       resultAnswer: string[];
+      row1Answers: string[];
+      row2Answers: string[];
+      fibAnswer: string;
+      mcqAnswer: string;
     }[]
   >([]);
   const grid1QuestionRef = useRef<{ submitForm: () => void } | null>(null);
@@ -25,6 +30,8 @@ const Questions: React.FC = () => {
             answerResult: '333338',
           },
           numbers: { n1: '23326', n2: '25622' },
+          questionType: 'grid-1',
+          description: { en: 'Solve' },
         },
         {
           answers: {
@@ -34,6 +41,24 @@ const Questions: React.FC = () => {
             answerResult: 'BBBBBB',
           },
           numbers: { n1: '43326', n2: '55622' },
+          questionType: 'grid-1',
+          description: { en: 'Solve' },
+        },
+        {
+          numbers: { n1: '756', n2: '53552' },
+          questionType: 'grid-2',
+          description: { en: 'Write numbers as per their place values' },
+        },
+        {
+          questionType: 'fib',
+          numbers: { n1: '7', n2: '2200' },
+          description: { en: 'Solve' },
+        },
+        {
+          numbers: { n1: '45', n2: '4567' },
+          options: ['7645', '5434', '6582', '6541', '', ''],
+          questionType: 'mcq',
+          description: { en: 'Choose the correct option' },
         },
       ];
       setQuestions(mockQuestions);
@@ -54,6 +79,10 @@ const Questions: React.FC = () => {
       {
         topAnswer: gridData.topAnswer,
         resultAnswer: gridData.resultAnswer,
+        row1Answers: gridData?.row1Answers,
+        row2Answers: gridData?.row2Answers,
+        fibAnswer: gridData?.fibAnswer,
+        mcqAnswer: gridData?.mcqAnswer,
       },
     ]);
     setCurrentQuestionIndex((prev) => prev + 1); // Move to next question
@@ -66,11 +95,15 @@ const Questions: React.FC = () => {
   }, [submittedAnswers]);
   return (
     <ContainerLayout
-      headerText={`Question ${currentQuestionIndex + 1}`}
+      headerText={
+        questions[currentQuestionIndex]?.description?.en
+          ? `${questions[currentQuestionIndex]?.description?.en}`
+          : 'Loading...'
+      }
       content={
         <div className='text-4xl font-semibold text-headingTextColor'>
           {!!questions.length && currentQuestion ? (
-            <Grid1Question
+            <GridQuestion
               ref={grid1QuestionRef}
               question={questions[currentQuestionIndex]}
               onSubmit={handleQuestionSubmit}
