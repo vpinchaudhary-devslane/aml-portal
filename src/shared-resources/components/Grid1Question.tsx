@@ -16,6 +16,7 @@ interface GridQuestionProps {
       [key: string]: string;
     };
     questionType: string;
+    questionId: string;
     options?: string[];
   };
   onSubmit: (gridData: any) => void;
@@ -29,6 +30,7 @@ interface FormValues {
   questionType: string;
   fibAnswer: string;
   mcqAnswer: string;
+  questionId: string;
 }
 
 // Using forwardRef to forward refs to the parent component
@@ -141,12 +143,14 @@ const GridQuestion = forwardRef(
         questionType: question.questionType,
         fibAnswer: '',
         mcqAnswer: '',
+        questionId: question.questionId,
       },
       enableReinitialize: true,
       validationSchema,
       onSubmit: (values) => {
         if (question.questionType === 'grid-1') {
           onSubmit({
+            questionId: question.questionId,
             topAnswer: values.topAnswer,
             resultAnswer: values.resultAnswer,
           });
@@ -154,13 +158,16 @@ const GridQuestion = forwardRef(
           onSubmit({
             row1Answers: values.row1Answers,
             row2Answers: values.row2Answers,
+            questionId: question.questionId,
           });
         } else if (question.questionType === 'fib') {
           onSubmit({
+            questionId: question.questionId,
             fibAnswer: values.fibAnswer, // Pass the FIB answer
           });
         } else if (question.questionType === 'mcq') {
           onSubmit({
+            questionId: question.questionId,
             mcqAnswer: values.mcqAnswer, // Pass the FIB answer
           });
         }

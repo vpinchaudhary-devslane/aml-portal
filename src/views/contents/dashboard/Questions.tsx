@@ -15,6 +15,7 @@ const Questions: React.FC = () => {
       row2Answers: string[];
       fibAnswer: string;
       mcqAnswer: string;
+      questionId: string;
     }[]
   >([]);
   const grid1QuestionRef = useRef<{ submitForm: () => void } | null>(null);
@@ -32,6 +33,7 @@ const Questions: React.FC = () => {
           numbers: { n1: '23326', n2: '25622' },
           questionType: 'grid-1',
           description: { en: 'Solve' },
+          questionId: '1',
         },
         {
           answers: {
@@ -43,22 +45,26 @@ const Questions: React.FC = () => {
           numbers: { n1: '43326', n2: '55622' },
           questionType: 'grid-1',
           description: { en: 'Solve' },
+          questionId: '2',
         },
         {
           numbers: { n1: '756', n2: '53552' },
           questionType: 'grid-2',
           description: { en: 'Write numbers as per their place values' },
+          questionId: '3',
         },
         {
           questionType: 'fib',
           numbers: { n1: '7', n2: '2200' },
           description: { en: 'Solve' },
+          questionId: '4',
         },
         {
           numbers: { n1: '45', n2: '4567' },
           options: ['7645', '5434', '6582', '6541', '', ''],
           questionType: 'mcq',
           description: { en: 'Choose the correct option' },
+          questionId: '5',
         },
       ];
       setQuestions(mockQuestions);
@@ -82,6 +88,7 @@ const Questions: React.FC = () => {
         row2Answers: gridData?.row2Answers,
         fibAnswer: gridData?.fibAnswer,
         mcqAnswer: gridData?.mcqAnswer,
+        questionId: gridData.questionId,
       },
     ]);
     setCurrentQuestionIndex((prev) => prev + 1); // Move to next question
@@ -90,8 +97,18 @@ const Questions: React.FC = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
-    console.log('LATEST ANSWERS', submittedAnswers);
+    const filteredAnswers = submittedAnswers.map(
+      ({ questionId, ...answers }) => ({
+        questionId,
+        answers: Object.fromEntries(
+          Object.entries(answers).filter(([_, value]) => value !== undefined)
+        ),
+      })
+    );
+
+    console.log('LATEST ANSWERS', filteredAnswers);
   }, [submittedAnswers]);
+
   return (
     <ContainerLayout
       headerText={
@@ -105,7 +122,7 @@ const Questions: React.FC = () => {
             <GridQuestion
               ref={grid1QuestionRef}
               question={questions[currentQuestionIndex]}
-              onSubmit={handleQuestionSubmit}
+              onSubmit={(gridData) => handleQuestionSubmit(gridData)}
             />
           ) : (
             <Loader />
