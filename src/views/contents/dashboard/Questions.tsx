@@ -27,7 +27,7 @@ const Questions: React.FC = () => {
             result: '1234',
             isShowCarry: true,
             answerTop: '3339',
-            answerResult: '333338',
+            answerResult: '233338',
           },
           numbers: { n1: '23326', n2: '25622' },
           questionType: 'grid-1',
@@ -73,7 +73,6 @@ const Questions: React.FC = () => {
   };
 
   const handleQuestionSubmit = (gridData: any) => {
-    console.log('Grid Submitted Data in Questions:', gridData);
     setSubmittedAnswers((prev) => [
       ...prev,
       {

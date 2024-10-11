@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
+import { fetchLearnerJourney } from 'store/actions/learnerJourney.actions';
 
 const DashboardC: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleStartClick = () => {
     navigate('/instructions');
   };
+
+  useEffect(() => {
+    dispatch(fetchLearnerJourney('dhdjkhas3424234hjhjk'));
+  });
 
   return (
     <ContainerLayout

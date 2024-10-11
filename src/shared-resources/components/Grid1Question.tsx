@@ -145,7 +145,6 @@ const GridQuestion = forwardRef(
       enableReinitialize: true,
       validationSchema,
       onSubmit: (values) => {
-        console.log('VALUES', values);
         if (question.questionType === 'grid-1') {
           onSubmit({
             topAnswer: values.topAnswer,

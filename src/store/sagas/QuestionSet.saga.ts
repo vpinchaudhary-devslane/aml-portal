@@ -24,10 +24,10 @@ function* QuestionSetFetchSaga({
   }
 }
 
-function* QuestionSetSaga() {
+function* questionSetSaga() {
   yield all([
     takeLatest(QuestionSetActionType.FETCH_QUESTION_SET, QuestionSetFetchSaga),
   ]);
 }
 
-export default QuestionSetSaga;
+export default questionSetSaga;

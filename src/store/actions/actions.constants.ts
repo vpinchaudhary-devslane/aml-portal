@@ -22,3 +22,9 @@ export enum QuestionActionType {
   FETCH_QUESTION_COMPLETED = 'question/fetch/completed',
   FETCH_QUESTION_ERROR = 'question/fetch/error',
 }
+
+export enum LearnerJourneyActionType {
+  FETCH_LEARNER_JOURNEY = 'fetch/learner/journey',
+  FETCH_LEARNER_JOURNEY_COMPLETED = 'fetch/learner/journey/completed',
+  FETCH_LEARNER_JOURNEY_FAILED = 'fetch/learner/journey/failed',
+}
