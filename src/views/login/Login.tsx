@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Form, Formik } from 'formik';
 import { useDispatch } from 'react-redux';
 import * as yup from 'yup';
+import { fetchCSRFToken } from 'store/actions/csrfToken.action';
+import { localStorageService } from 'services/LocalStorageService';
 import { authLoginAction } from '../../store/actions/auth.action';
 import FormikInput from '../../shared-resources/components/Input/FormikInput';
 import Button from '../../shared-resources/components/Button/Button';
@@ -9,15 +11,21 @@ import Button from '../../shared-resources/components/Button/Button';
 const Login: React.FC = () => {
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    if (!localStorageService.getCSRFToken()) {
+      dispatch(fetchCSRFToken());
+    }
+  }, [dispatch]);
+
   const initialValues = {
-    email: '',
+    username: '',
     password: '',
   };
 
-  const handleSubmit = (values: { email: string; password: string }) => {
+  const handleSubmit = (values: { username: string; password: string }) => {
     const loginValues = {
       password: values.password,
-      email: values.email?.toLowerCase(),
+      username: values.username?.toLowerCase(),
     };
     dispatch(authLoginAction(loginValues));
   };
@@ -32,16 +40,17 @@ const Login: React.FC = () => {
         initialValues={initialValues}
         onSubmit={handleSubmit}
         validationSchema={yup.object().shape({
-          email: yup.string().email().required('Email is required'),
+          username: yup.string().required('Username is required'),
           password: yup.string().required('Password is required'),
         })}
-        validateOnChange={false} // This disables validation on change
-        validateOnBlur // This enables validation on blur
+        validateOnChange // Disable validation on every keystroke
+        validateOnBlur={false} // Validate only when the field loses focus (onBlur)
       >
         {(formikProps) => {
-          const areFieldsEmpty =
-            !formikProps.values.email || !formikProps.values.password;
-          const isError = Object.keys(formikProps.errors).length > 0;
+          // Check if both fields have values (without worrying about validation)
+          const areFieldsFilled =
+            !!formikProps.values.username && !!formikProps.values.password;
+
           return (
             <Form>
               <div className='flex gap-[85px] items-end'>
@@ -54,23 +63,29 @@ const Login: React.FC = () => {
                       <p className='text-2xl w-36 text-headingTextColor translate-y-1/2'>
                         USERNAME
                       </p>
-                      <FormikInput name='email' className='w-[236px]' />
+                      <FormikInput
+                        name='username'
+                        className='w-[236px]'
+                        onBlur={formikProps.handleBlur} // Handle blur event for validation
+                      />
                     </div>
                     <div className='flex gap-4 items-start'>
-                      <p className='text-2xl w-36 text-headingTextColor  translate-y-1/2'>
+                      <p className='text-2xl w-36 text-headingTextColor translate-y-1/2'>
                         PASSWORD
                       </p>
                       <FormikInput
                         name='password'
-                        className='w-[236px]'
                         type='password'
+                        className='w-[236px]'
+                        onBlur={formikProps.handleBlur} // Handle blur event for validation
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className='pb-16'>
-                  <Button type='submit' disabled={areFieldsEmpty || isError}>
+                  {/* Button gets enabled as soon as both fields have values */}
+                  <Button type='submit' disabled={!areFieldsFilled}>
                     Login
                   </Button>
                 </div>

@@ -1,18 +1,12 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-// services
-import { localStorageService } from 'services/LocalStorageService';
-// actions
-import { authFetchMeAction, authLogoutAction } from 'store/actions/auth.action';
-// selectors
+import { authFetchMeAction } from 'store/actions/auth.action';
 import {
   isAuthLoadingSelector,
   isAuthenticatedSelector,
 } from 'store/selectors/auth.selector';
-// components
 import Spinner from 'shared-resources/components/Spinner/Spinner';
-// constants
 
 const AuthenticatedRouteHOC = <P extends object>(
   Component: React.ComponentType<P>
@@ -26,18 +20,18 @@ const AuthenticatedRouteHOC = <P extends object>(
     const isLoading = useSelector(isAuthLoadingSelector);
 
     useEffect(() => {
-      const token = localStorageService.getAuthToken();
-      const tokenExpiry = localStorageService.getTokenExpiry();
+      const checkConnectSid = () =>
+        document.cookie
+          .split(';')
+          .some((item) => item.trim().startsWith('connect.sid='));
       const currentTime = new Date();
-      if (token && !isAuthenticated && !isLoading) {
-        dispatch(authFetchMeAction());
+      if (checkConnectSid() && !isAuthenticated && !isLoading) {
+        setTimeout(() => {
+          if (checkConnectSid()) {
+            dispatch(authFetchMeAction());
+          }
+        }, 100);
       }
-      if ((token && tokenExpiry && currentTime >= tokenExpiry) || !token) {
-        localStorage.clear();
-        dispatch(authLogoutAction());
-        navigateTo('/login');
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, isLoading, searchParams]);
 
     if (isLoading) {

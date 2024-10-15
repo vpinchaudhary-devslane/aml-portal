@@ -3,6 +3,7 @@ import { DecodedToken } from '../types/interfaces';
 
 export const AUTH_TOKEN = 'auth_token';
 export const PREV_LINK = 'prev_link';
+export const CSRF_TOKEN = 'csrf-token';
 
 export class LocalStorageService {
   private static _instance: LocalStorageService;
@@ -57,12 +58,24 @@ export class LocalStorageService {
     this.setLocalStorageValue(AUTH_TOKEN, token);
   }
 
+  setCSRFToken(token: string): void {
+    this.setLocalStorageValue(CSRF_TOKEN, token);
+  }
+
   getAuthToken(): string | null {
     return this.getLocalStorageValue(AUTH_TOKEN);
   }
 
+  getCSRFToken(): string | null {
+    return this.getLocalStorageValue(CSRF_TOKEN);
+  }
+
   removeAuthToken(): void {
     this.removeLocalStorageValue(AUTH_TOKEN);
+  }
+
+  removeCSRFToken(): void {
+    this.removeLocalStorageValue(CSRF_TOKEN);
   }
 
   getTokenExpiry() {

@@ -32,7 +32,9 @@ export const learnerJourneyReducer: Reducer<LearnerJourneyState> = (
         break;
       }
       case LearnerJourneyActionType.FETCH_LEARNER_JOURNEY_FAILED: {
+        const error = action.payload as string;
         draft.loading = false;
+        draft.error = error;
         break;
       }
       default: {

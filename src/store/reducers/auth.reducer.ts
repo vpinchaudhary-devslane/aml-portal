@@ -4,7 +4,7 @@ import { AuthActionType } from 'store/actions/actions.constants';
 import { User } from '../../models/entities/User';
 
 export interface AuthState {
-  userID?: number;
+  learnerId?: number;
   loading?: boolean;
   error?: string;
   user?: User;
@@ -26,7 +26,7 @@ export const authReducer: Reducer<AuthState> = (
       }
       case AuthActionType.LOGIN_COMPLETED:
       case AuthActionType.FETCH_ME_COMPLETED: {
-        draft.userID = action.payload.id;
+        draft.learnerId = action.payload.identifier;
         draft.loading = false;
         draft.error = undefined;
         break;

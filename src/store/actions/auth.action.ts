@@ -3,7 +3,7 @@ import { AuthActionType } from './actions.constants';
 
 // TODO: MOVE TO SPECIFIC TYPE FILE
 export interface AuthLoginActionPayloadType {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -35,5 +35,5 @@ export const authFetchMeErrorAction = (message: string) => ({
 });
 
 export const authLogoutAction = () => ({
-  type: AuthActionType.RESET,
+  type: AuthActionType.LOGOUT,
 });

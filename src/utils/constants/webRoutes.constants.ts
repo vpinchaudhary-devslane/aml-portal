@@ -3,12 +3,18 @@ export const webRoutes: any = {
     login: () => '/login',
   },
   dashboard: {
-    root: () => '/',
+    root: () => '/app',
   },
   instructions: {
-    root: () => '/',
+    root: () => '/instructions',
   },
   questions: {
-    root: () => '/',
+    root: () => '/questions',
+  },
+  continueJourney: {
+    root: () => '/continue-journey',
+  },
+  welcome: {
+    root: () => '/welcome',
   },
 };

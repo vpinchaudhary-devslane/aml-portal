@@ -8,13 +8,13 @@ import {
 import { questionSetService } from 'services/api-services/QuestionSetService';
 
 function* QuestionSetFetchSaga({
-  payload: { question_set_id: string },
+  payload,
 }: StoreAction<QuestionSetActionType>): any {
   try {
     const response = yield call(questionSetService.fetchQuestionSet, {
-      question_set_id: 'hello',
+      question_set_id: payload,
     });
-    yield put(questionSetFetchCompletedAction(response.questionSet));
+    yield put(questionSetFetchCompletedAction(response.result));
   } catch (e: any) {
     yield put(
       questionSetFetchErrorAction(

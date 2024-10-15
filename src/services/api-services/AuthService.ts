@@ -7,14 +7,24 @@ class AuthService {
   }
 
   async login(data: {
-    email: string;
+    username: string;
     password: string;
   }): Promise<{ user: User; token: string }> {
-    return baseApiService.post('/login', data, { extras: { useAuth: false } });
+    return baseApiService.post('/auth/login', 'api.auth.login', data, {
+      extras: { useAuth: false },
+    });
   }
 
   async fetchMe(): Promise<{ user: User }> {
-    return baseApiService.get('/me');
+    return baseApiService.get('/learner/read');
+  }
+
+  async fetchCSRFToken(): Promise<{ token: string }> {
+    return baseApiService.get('/auth/csrf-token');
+  }
+
+  async logout() {
+    return baseApiService.post('/auth/logout', 'api.auth.logout');
   }
 }
 

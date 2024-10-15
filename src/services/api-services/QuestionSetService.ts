@@ -9,9 +9,7 @@ class QuestionSetService {
   async fetchQuestionSet(data: {
     question_set_id: string;
   }): Promise<QuestionSet> {
-    return baseApiService.post(`/question-set/${data.question_set_id}`, data, {
-      extras: { useAuth: false },
-    });
+    return baseApiService.get(`question-set/read/${data.question_set_id}`);
   }
 }
 

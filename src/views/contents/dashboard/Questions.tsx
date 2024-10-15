@@ -1,12 +1,14 @@
-import { Description } from '@mui/icons-material';
 import React, { useEffect, useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
 import GridQuestion from 'shared-resources/components/Grid1Question';
 import Loader from 'shared-resources/components/Loader/Loader';
+import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const questionSet = useSelector(questionsSetSelector);
   const [submittedAnswers, setSubmittedAnswers] = useState<
     {
       topAnswer: string[];
@@ -71,6 +73,13 @@ const Questions: React.FC = () => {
     };
     fetchQuestions();
   }, []);
+
+  useEffect(() => {
+    if (questionSet?.questions) {
+      const { questions } = questionSet;
+      console.log('HERE', questions);
+    }
+  }, [questionSet]);
 
   const handleNextClick = () => {
     if (grid1QuestionRef.current) {

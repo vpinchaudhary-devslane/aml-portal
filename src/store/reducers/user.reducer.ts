@@ -1,14 +1,13 @@
 import produce from 'immer';
 import { Reducer } from 'redux';
 import { AuthActionType } from 'store/actions/actions.constants';
-import { addOne } from 'store/base/base.reducer';
-import { User } from '../../models/entities/User';
-import { EntityState } from '../base/EntityState';
 
-export interface UserState extends EntityState<User> {}
+export interface UserState {
+  learnerId: string;
+}
 
 const initialState: UserState = {
-  entities: {},
+  learnerId: '',
 };
 
 export const userReducer: Reducer<UserState> = (
@@ -16,12 +15,11 @@ export const userReducer: Reducer<UserState> = (
   state: UserState = initialState,
   action
 ) =>
-  produce(state, () => {
+  produce(state, (draft: UserState) => {
     switch (action.type) {
-      case AuthActionType.LOGIN_COMPLETED:
-      case AuthActionType.FETCH_ME_COMPLETED: {
-        const user = action.payload as User;
-        addOne(state, user);
+      case AuthActionType.LOGIN_COMPLETED: {
+        const learnerId = action.payload.identifier as string;
+        draft.learnerId = learnerId;
         break;
       }
       default: {

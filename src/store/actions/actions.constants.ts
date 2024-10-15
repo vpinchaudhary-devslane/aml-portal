@@ -9,6 +9,7 @@ export enum AuthActionType {
   FETCH_ME_ERROR = 'auth/fetch/me/error',
 
   RESET = 'store/reset',
+  LOGOUT = 'store/logout',
 }
 
 export enum QuestionSetActionType {
@@ -27,4 +28,10 @@ export enum LearnerJourneyActionType {
   FETCH_LEARNER_JOURNEY = 'fetch/learner/journey',
   FETCH_LEARNER_JOURNEY_COMPLETED = 'fetch/learner/journey/completed',
   FETCH_LEARNER_JOURNEY_FAILED = 'fetch/learner/journey/failed',
+}
+
+export enum CSRFTokenActionType {
+  FETCH_CSRF_TOKEN = 'fetch/csrf/token',
+  FETCH_CSRF_TOKEN_COMPLETED = 'fetch/csrf/token/completed',
+  FETCH_CSRF_TOKEN_ERROR = 'fetch/csrf/token/failed',
 }

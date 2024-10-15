@@ -24,9 +24,16 @@ const UnauthenticatedRouteHOC = <P extends {}>(
     const prevLink = localStorageService.getLocalStorageValue(PREV_LINK);
 
     useEffect(() => {
-      const token = localStorageService.getAuthToken();
-      if (token && !isAuthenticated && !isLoading) {
-        dispatch(authFetchMeAction());
+      const checkConnectSid = () =>
+        document.cookie
+          .split(';')
+          .some((item) => item.trim().startsWith('connect.sid='));
+      if (checkConnectSid() && !isAuthenticated && !isLoading) {
+        setTimeout(() => {
+          if (checkConnectSid()) {
+            dispatch(authFetchMeAction());
+          }
+        }, 100);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, isLoading]);

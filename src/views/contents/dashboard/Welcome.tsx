@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import Loader from 'shared-resources/components/Loader/Loader';
+import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
+import { fetchLearnerJourney } from 'store/actions/learnerJourney.actions';
 import {
   isLearnerJourneyLoadingSelector,
   learnerJourneySelector,
 } from 'store/selectors/learnerJourney.selector';
 
-const DashboardC: React.FC = () => {
+const Welcome: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const journeyData = useSelector(learnerJourneySelector);
@@ -21,11 +22,22 @@ const DashboardC: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    dispatch(fetchLearnerJourney('dhdjkhas3424234hjhjk'));
+  });
+
   return (
-    <div className='md:w-full h-[250px] sm:h-[350px] md:h-[450px] max-h-[480px] mt-[61px] flex items-center justify-center'>
-      <Loader />
-    </div>
+    <ContainerLayout
+      headerText='Hello, Nivedha Shivaraman'
+      content={
+        <span className='text-4xl font-semibold text-headingTextColor'>
+          Press Start to Begin
+        </span>
+      }
+      buttonText='Start'
+      onButtonClick={handleStartClick}
+    />
   );
 };
 
-export default DashboardC;
+export default Welcome;

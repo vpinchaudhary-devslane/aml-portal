@@ -6,6 +6,7 @@ import {
   fetchLearnerJourneyFailed,
 } from 'store/actions/learnerJourney.actions';
 import { learnerJourneyService } from 'services/api-services/learnerJourneyService';
+import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 
 function* LearnerJourneyFetchSaga({
   payload,
@@ -14,7 +15,10 @@ function* LearnerJourneyFetchSaga({
     const response = yield call(learnerJourneyService.fetchLearnerjourney, {
       learner_id: payload,
     });
-    yield put(fetchLearnerJourneyCompleted(response.result.data));
+    yield put(fetchLearnerJourneyCompleted(response.result?.data));
+    if (response?.result?.data?.question_set_id) {
+      yield put(questionSetFetchAction(response.result.data.question_set_id));
+    }
   } catch (e: any) {
     yield put(
       fetchLearnerJourneyFailed(
