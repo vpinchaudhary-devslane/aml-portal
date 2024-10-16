@@ -54,7 +54,6 @@ export const transformQuestions = (apiQuestions: any): any =>
     // Construct options only for MCQ type questions
     const options =
       question_type === QuestionType.MCQ ? question_body?.options : undefined;
-    console.log('HERE 2', options);
 
     return {
       questionId: identifier, // Assigning identifier as questionId

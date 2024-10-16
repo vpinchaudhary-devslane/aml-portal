@@ -24,69 +24,69 @@ const Questions: React.FC = () => {
   >([]);
   const questionRef = useRef<{ submitForm: () => void } | null>(null);
 
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      const mockQuestions = [
-        {
-          answers: {
-            result: '1234',
-            isPrefil: true,
-            answerTop: '3339',
-            answerResult: '233338',
-          },
-          numbers: { n1: '23326', n2: '25622' },
-          questionType: QuestionType.GRID_1,
-          description: { en: 'Solve' },
-          questionId: '1',
-        },
-        {
-          answers: {
-            result: '5678',
-            isPrefil: true,
-            answerTop: 'BBBB',
-            answerResult: 'BBBBBB',
-          },
-          numbers: { n1: '43326', n2: '55622' },
-          questionType: QuestionType.GRID_1,
-          description: { en: 'Solve' },
-          questionId: '2',
-        },
-        {
-          numbers: { n1: '756', n2: '53552' },
-          questionType: QuestionType.GRID_2,
-          description: { en: 'Write numbers as per their place values' },
-          questionId: '3',
-        },
-        {
-          questionType: QuestionType.FIB,
-          numbers: { n1: '7', n2: '2200' },
-          description: { en: 'Solve' },
-          questionId: '4',
-        },
-        {
-          numbers: { n1: '45', n2: '4567' },
-          options: ['7645', '5434', '6582', '6541', '', ''],
-          questionType: QuestionType.MCQ,
-          description: { en: 'Choose the correct option' },
-          questionId: '5',
-        },
-      ];
-      setQuestions(mockQuestions);
-    };
-    fetchQuestions();
-  }, []);
-
   // useEffect(() => {
-  //   if (questionSet?.questions) {
-  //     const { questions } = questionSet;
-  //     console.log('HERE', questions);
-  //     if (!!questions) {
-  //       const transformedQuestions = transformQuestions(questions);
-  //       console.log('Transformed', transformedQuestions);
-  //       setQuestions(transformedQuestions);
-  //     }
-  //   }
-  // }, [questionSet]);
+  //   const fetchQuestions = async () => {
+  //     const mockQuestions = [
+  //       {
+  //         answers: {
+  //           result: '1234',
+  //           isPrefil: true,
+  //           answerTop: '3339',
+  //           answerResult: '233338',
+  //         },
+  //         numbers: { n1: '23326', n2: '25622' },
+  //         questionType: QuestionType.GRID_1,
+  //         description: { en: 'Solve' },
+  //         questionId: '1',
+  //       },
+  //       {
+  //         answers: {
+  //           result: '5678',
+  //           isPrefil: true,
+  //           answerTop: 'BBBB',
+  //           answerResult: 'BBBBBB',
+  //         },
+  //         numbers: { n1: '43326', n2: '55622' },
+  //         questionType: QuestionType.GRID_1,
+  //         description: { en: 'Solve' },
+  //         questionId: '2',
+  //       },
+  //       {
+  //         numbers: { n1: '756', n2: '53552' },
+  //         questionType: QuestionType.GRID_2,
+  //         description: { en: 'Write numbers as per their place values' },
+  //         questionId: '3',
+  //       },
+  //       {
+  //         questionType: QuestionType.FIB,
+  //         numbers: { n1: '7', n2: '2200' },
+  //         description: { en: 'Solve' },
+  //         questionId: '4',
+  //       },
+  //       {
+  //         numbers: { n1: '45', n2: '4567' },
+  //         options: ['7645', '5434', '6582', '6541', '', ''],
+  //         questionType: QuestionType.MCQ,
+  //         description: { en: 'Choose the correct option' },
+  //         questionId: '5',
+  //       },
+  //     ];
+  //     setQuestions(mockQuestions);
+  //   };
+  //   fetchQuestions();
+  // }, []);
+
+  useEffect(() => {
+    if (questionSet?.questions) {
+      const { questions } = questionSet;
+      console.log('HERE', questions);
+      if (questions) {
+        const transformedQuestions = transformQuestions(questions);
+        console.log('Transformed', transformedQuestions);
+        setQuestions(transformedQuestions);
+      }
+    }
+  }, [questionSet]);
 
   const handleNextClick = () => {
     if (questionRef.current) {

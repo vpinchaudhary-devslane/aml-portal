@@ -1,4 +1,4 @@
-/* eslint-disable func-names, react/no-this-in-sfc */
+/* eslint-disable func-names, react/no-this-in-sfc,  no-unsafe-optional-chaining */
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -188,10 +188,24 @@ const Question = forwardRef(({ question, onSubmit }: QuestionProps, ref) => {
     >
       {question.questionType === QuestionType.GRID_1 && (
         <>
-          <div className='flex space-x-2'>
-            <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]'>
-              {' '}
+          <div className='flex justify-center self-end'>
+            {Array.from({ length: question.answers?.answerTop?.length }).map(
+              (_, index) => (
+                <div
+                  key={index}
+                  className='w-[46px] mr-2 p-2 text-[#A5A5A5] text-center  flex items-center justify-center font-bold text-[20px]'
+                >
+                  {['U', 'T', 'H', 'Th', 'TTh', 'TTTh'][
+                    question.answers?.answerTop?.length - index
+                  ] || ''}
+                </div>
+              )
+            )}
+            <div className='w-[46px] p-2 text-[#A5A5A5] text-center  flex items-center justify-center font-bold text-[20px]'>
+              U
             </div>
+          </div>
+          <div className='flex justify-end space-x-2 self-end'>
             {formik.values?.topAnswer?.map((value, index) => (
               <div key={`top-${index}`}>
                 <input
@@ -216,10 +230,13 @@ const Question = forwardRef(({ question, onSubmit }: QuestionProps, ref) => {
                   )}
               </div>
             ))}
+            <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]'>
+              {' '}
+            </div>
           </div>
-          <div className='flex flex-col space-y-2'>
+          <div className='flex flex-col space-y-2 self-end'>
             {Object.keys(numbers).map((key, idx) => (
-              <div key={key} className='flex justify-center space-x-2'>
+              <div key={key} className='flex justify-end space-x-2'>
                 {/* Adding leading spaces for all but the last number */}
                 {idx < Object.keys(numbers).length - 1 && (
                   <div className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px] leading-[42.3px]'>
@@ -247,9 +264,9 @@ const Question = forwardRef(({ question, onSubmit }: QuestionProps, ref) => {
           </div>
           <hr className='w-full text-black border border-black' />
           <div className='flex space-x-2'>
-            {/* <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]'>
+            <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]'>
               {' '}
-            </div> */}
+            </div>
             {formik.values?.resultAnswer?.map((value, index) => (
               <div key={`result-${index}`}>
                 <input
