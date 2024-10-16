@@ -12,6 +12,7 @@ import {
 } from 'store/selectors/auth.selector';
 // components
 import Spinner from 'shared-resources/components/Spinner/Spinner';
+import useCookie from '../hooks/useCookie';
 
 const UnauthenticatedRouteHOC = <P extends {}>(
   Component: React.ComponentType<P>
@@ -22,21 +23,18 @@ const UnauthenticatedRouteHOC = <P extends {}>(
     const isAuthenticated = useSelector(isAuthenticatedSelector);
     const isLoading = useSelector(isAuthLoadingSelector);
     const prevLink = localStorageService.getLocalStorageValue(PREV_LINK);
+    const hasConnectSid = useCookie('connect.sid');
 
     useEffect(() => {
-      const checkConnectSid = () =>
-        document.cookie
-          .split(';')
-          .some((item) => item.trim().startsWith('connect.sid='));
-      if (checkConnectSid() && !isAuthenticated && !isLoading) {
+      if (hasConnectSid && !isAuthenticated && !isLoading) {
         setTimeout(() => {
-          if (checkConnectSid()) {
+          if (hasConnectSid) {
             dispatch(authFetchMeAction());
           }
         }, 100);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated, isLoading]);
+    }, [hasConnectSid, isAuthenticated, isLoading]);
 
     if (isLoading) {
       return (
