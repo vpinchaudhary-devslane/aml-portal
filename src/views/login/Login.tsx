@@ -12,6 +12,7 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    localStorageService.removeCSRFToken();
     if (!localStorageService.getCSRFToken()) {
       dispatch(fetchCSRFToken());
     }

@@ -1,8 +1,10 @@
+import { QuestionType } from 'models/enums/QuestionType.enum';
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
-import GridQuestion from 'shared-resources/components/Grid1Question';
 import Loader from 'shared-resources/components/Loader/Loader';
+import Question from 'shared-resources/components/Question';
+import { transformQuestions } from 'shared-resources/utils/helpers';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 
 const Questions: React.FC = () => {
@@ -20,7 +22,7 @@ const Questions: React.FC = () => {
       questionId: string;
     }[]
   >([]);
-  const grid1QuestionRef = useRef<{ submitForm: () => void } | null>(null);
+  const questionRef = useRef<{ submitForm: () => void } | null>(null);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -28,35 +30,35 @@ const Questions: React.FC = () => {
         {
           answers: {
             result: '1234',
-            isShowCarry: true,
+            isPrefil: true,
             answerTop: '3339',
             answerResult: '233338',
           },
           numbers: { n1: '23326', n2: '25622' },
-          questionType: 'grid-1',
+          questionType: QuestionType.GRID_1,
           description: { en: 'Solve' },
           questionId: '1',
         },
         {
           answers: {
             result: '5678',
-            isShowCarry: true,
+            isPrefil: true,
             answerTop: 'BBBB',
             answerResult: 'BBBBBB',
           },
           numbers: { n1: '43326', n2: '55622' },
-          questionType: 'grid-1',
+          questionType: QuestionType.GRID_1,
           description: { en: 'Solve' },
           questionId: '2',
         },
         {
           numbers: { n1: '756', n2: '53552' },
-          questionType: 'grid-2',
+          questionType: QuestionType.GRID_2,
           description: { en: 'Write numbers as per their place values' },
           questionId: '3',
         },
         {
-          questionType: 'fib',
+          questionType: QuestionType.FIB,
           numbers: { n1: '7', n2: '2200' },
           description: { en: 'Solve' },
           questionId: '4',
@@ -64,7 +66,7 @@ const Questions: React.FC = () => {
         {
           numbers: { n1: '45', n2: '4567' },
           options: ['7645', '5434', '6582', '6541', '', ''],
-          questionType: 'mcq',
+          questionType: QuestionType.MCQ,
           description: { en: 'Choose the correct option' },
           questionId: '5',
         },
@@ -74,16 +76,21 @@ const Questions: React.FC = () => {
     fetchQuestions();
   }, []);
 
-  useEffect(() => {
-    if (questionSet?.questions) {
-      const { questions } = questionSet;
-      console.log('HERE', questions);
-    }
-  }, [questionSet]);
+  // useEffect(() => {
+  //   if (questionSet?.questions) {
+  //     const { questions } = questionSet;
+  //     console.log('HERE', questions);
+  //     if (!!questions) {
+  //       const transformedQuestions = transformQuestions(questions);
+  //       console.log('Transformed', transformedQuestions);
+  //       setQuestions(transformedQuestions);
+  //     }
+  //   }
+  // }, [questionSet]);
 
   const handleNextClick = () => {
-    if (grid1QuestionRef.current) {
-      grid1QuestionRef.current.submitForm();
+    if (questionRef.current) {
+      questionRef.current.submitForm();
     }
   };
 
@@ -128,8 +135,8 @@ const Questions: React.FC = () => {
       content={
         <div className='text-4xl font-semibold text-headingTextColor'>
           {!!questions.length && currentQuestion ? (
-            <GridQuestion
-              ref={grid1QuestionRef}
+            <Question
+              ref={questionRef}
               question={questions[currentQuestionIndex]}
               onSubmit={(gridData) => handleQuestionSubmit(gridData)}
             />
