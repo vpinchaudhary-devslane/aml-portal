@@ -4,7 +4,10 @@ import { useSelector } from 'react-redux';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
 import Loader from 'shared-resources/components/Loader/Loader';
 import Question from 'shared-resources/components/Question';
-import { transformQuestions } from 'shared-resources/utils/helpers';
+import {
+  convertResponseToLearnerResponse,
+  transformQuestions,
+} from 'shared-resources/utils/helpers';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 
 const Questions: React.FC = () => {
@@ -113,6 +116,7 @@ const Questions: React.FC = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
+    // will check for refactoring after v1 release
     const filteredAnswers = submittedAnswers.map(
       ({ questionId, ...answers }) => ({
         questionId,
@@ -121,8 +125,13 @@ const Questions: React.FC = () => {
         ),
       })
     );
-
-    console.log('LATEST ANSWERS', filteredAnswers);
+    if (questionSet) {
+      const payload = convertResponseToLearnerResponse(
+        filteredAnswers,
+        questionSet?.identifier
+      );
+      console.log('PAYLOAD', payload);
+    }
   }, [submittedAnswers]);
 
   return (

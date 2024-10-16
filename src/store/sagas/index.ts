@@ -3,6 +3,7 @@ import authSaga from './auth.saga';
 import questionSetSaga from './QuestionSet.saga';
 import learnerJourneySaga from './learnerJourney.saga';
 import logicEngineEvaluationSaga from './logicEngineEvaluation.saga';
+import syncLearnerResponseSaga from './SyncLearnerResponse.saga';
 
 export default function* rootSaga() {
   yield all([
@@ -10,5 +11,6 @@ export default function* rootSaga() {
     fork(questionSetSaga),
     fork(learnerJourneySaga),
     fork(logicEngineEvaluationSaga),
+    fork(syncLearnerResponseSaga),
   ]);
 }

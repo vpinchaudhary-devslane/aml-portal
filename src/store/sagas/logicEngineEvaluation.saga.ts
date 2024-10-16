@@ -20,6 +20,7 @@ function* LogicEngineEvaluationFetchSaga({
         learner_id: payload,
       }
     );
+    // not needed
     // yield put(fetchLogicEngineEvaluationCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
       yield put(navigateTo('/welcome'));

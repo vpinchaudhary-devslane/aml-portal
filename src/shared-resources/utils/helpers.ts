@@ -1,6 +1,17 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { QuestionType } from 'models/enums/QuestionType.enum';
 
+type LearnerResponse = {
+  result: string;
+  answer_top?: string;
+};
+
+type QuestionData = {
+  question_id: string;
+  question_set_id: string;
+  learner_response: LearnerResponse;
+};
+
 export function getUserInitials(name: string): string {
   // Trim and split the string into an array of words
   const words = name.trim().split(/\s+/);
@@ -13,12 +24,6 @@ export function getUserInitials(name: string): string {
   // Return the initials
   return firstInitial + lastInitial;
 }
-
-// export const getUserFullName = (user?: User) =>
-//   [user?.first_name, user?.last_name]
-//     .filter((v) => !!v)
-//     .join(' ')
-//     .trim();
 
 export const transformQuestions = (apiQuestions: any): any =>
   apiQuestions.map((apiQuestion: any) => {
@@ -63,3 +68,44 @@ export const transformQuestions = (apiQuestions: any): any =>
       ...(options && { options }), // Include only if it's an MCQ question
     };
   });
+
+export function convertResponseToLearnerResponse(
+  response: any[],
+  questionSetId: string
+): QuestionData[] {
+  return response.map((item) => {
+    const { questionId, answers } = item;
+
+    let result = '';
+    let answer_top = '';
+
+    if (answers?.resultAnswer) {
+      result = answers.resultAnswer.join('');
+    } else if (answers?.fibAnswer) {
+      result = answers.fibAnswer;
+    } else if (answers?.mcqAnswer) {
+      result = answers.mcqAnswer;
+    } else if (answers?.row2Answers) {
+      result = answers.row2Answers.join('');
+    }
+
+    if (answers?.topAnswer) {
+      answer_top = answers.topAnswer.join('');
+    } else if (answers?.row1Answers) {
+      answer_top = answers.row1Answers.join('');
+    }
+
+    // Build the learner response
+    const learner_response: LearnerResponse = { result };
+    if (answer_top) {
+      learner_response.answer_top = answer_top;
+    }
+
+    // Return the transformed question data
+    return {
+      question_id: questionId,
+      question_set_id: questionSetId,
+      learner_response,
+    };
+  });
+}

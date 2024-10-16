@@ -19,7 +19,6 @@ export const userReducer: Reducer<UserState> = (
       case AuthActionType.LOGIN_COMPLETED:
       case AuthActionType.FETCH_ME_COMPLETED: {
         const user = action.payload as User;
-        console.log('HERE', action.payload);
         draft.user = user;
         break;
       }

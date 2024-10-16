@@ -41,3 +41,9 @@ export enum LogicEngineActionType {
   FETCH_LOGIC_ENGINE_EVALUATION_COMPLETED = 'fetch/learner/evaluation/completed',
   FETCH_LOGIC_ENGINE_EVALUATION_ERROR = 'fetch/learner/evaluation/error',
 }
+
+export enum SyncLearnerResponseActionType {
+  SYNC_LEARNER_RESPONSE = 'sync/learner/response',
+  SYNC_LEARNER_RESPONSE_COMPLETED = 'sync/learner/response/completed',
+  SYNC_LEARNER_RESPONSE_ERROR = 'sync/learner/response/error',
+}
