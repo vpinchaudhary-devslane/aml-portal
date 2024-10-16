@@ -40,12 +40,9 @@ function* loginSaga(data: LoginSagaPayloadType): any {
 function* fetchLoggedInUserSaga(): any {
   try {
     const response = yield call(authService.fetchMe);
-    yield put(authFetchMeCompletedAction(response?.result?.data));
     if (response.responseCode === 'OK' && response?.result?.data) {
+      yield put(authFetchMeCompletedAction(response?.result?.data));
       yield put(fetchLearnerJourney(response?.result?.data?.identifier));
-      yield put(navigateTo('/continue-journey'));
-    } else if (response.responseCode === 'OK' && !response?.result?.data) {
-      yield put(navigateTo('/welcome'));
     }
   } catch (e: any) {
     localStorageService.removeAuthToken();

@@ -27,7 +27,7 @@ export function getUserInitials(name: string): string {
 
 export const transformQuestions = (apiQuestions: any): any =>
   apiQuestions.map((apiQuestion: any) => {
-    const { question_body, identifier, question_type, description } =
+    const { question_body, identifier, question_type, description, name } =
       apiQuestion;
 
     // Construct answers only if present
@@ -63,6 +63,7 @@ export const transformQuestions = (apiQuestions: any): any =>
       questionId: identifier, // Assigning identifier as questionId
       questionType: question_type, // Adding questionType from the API
       description, // Adding description from the API
+      name,
       ...(answers && { answers }), // Include only if answers exist
       ...(numbers && { numbers }), // Include only if numbers exist
       ...(options && { options }), // Include only if it's an MCQ question

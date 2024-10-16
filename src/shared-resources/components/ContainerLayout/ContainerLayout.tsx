@@ -8,6 +8,7 @@ interface ContainerLayoutProps {
   content: React.ReactNode; // This will allow passing either text or any component
   buttonText: string;
   onButtonClick: () => void; // Handler for button click
+  buttonDisabled?: boolean;
 }
 
 const ContainerLayout: React.FC<ContainerLayoutProps> = ({
@@ -15,6 +16,7 @@ const ContainerLayout: React.FC<ContainerLayoutProps> = ({
   content,
   buttonText,
   onButtonClick,
+  buttonDisabled,
 }) => (
   <div className='flex flex-col'>
     <QuestionHeader HeaderText={headerText} />
@@ -24,7 +26,7 @@ const ContainerLayout: React.FC<ContainerLayoutProps> = ({
       </div>
 
       <div className='md:pb-16'>
-        <Button type='button' onClick={onButtonClick}>
+        <Button type='button' onClick={onButtonClick} disabled={buttonDisabled}>
           {buttonText}
         </Button>
       </div>

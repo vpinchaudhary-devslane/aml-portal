@@ -8,6 +8,7 @@ import {
 import { learnerJourneyService } from 'services/api-services/learnerJourneyService';
 import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
+import { fetchLogicEngineEvaluation } from 'store/actions/logicEngineEvaluation.action';
 
 function* LearnerJourneyFetchSaga({
   payload,
@@ -22,7 +23,7 @@ function* LearnerJourneyFetchSaga({
       yield put(questionSetFetchAction(response.result.data.question_set_id));
     } else if (response.responseCode === 'OK' && !response?.result?.data) {
       yield put(navigateTo('/welcome'));
-      // call logic engine API from here
+      yield put(fetchLogicEngineEvaluation(payload));
     }
   } catch (e: any) {
     yield put(

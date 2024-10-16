@@ -13,6 +13,7 @@ import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isFormValid, setIsFormValid] = useState(false);
   const questionSet = useSelector(questionsSetSelector);
   const [submittedAnswers, setSubmittedAnswers] = useState<
     {
@@ -25,7 +26,9 @@ const Questions: React.FC = () => {
       questionId: string;
     }[]
   >([]);
-  const questionRef = useRef<{ submitForm: () => void } | null>(null);
+  const questionRef = useRef<{
+    submitForm: () => void;
+  } | null>(null);
 
   // useEffect(() => {
   //   const fetchQuestions = async () => {
@@ -148,6 +151,9 @@ const Questions: React.FC = () => {
               ref={questionRef}
               question={questions[currentQuestionIndex]}
               onSubmit={(gridData) => handleQuestionSubmit(gridData)}
+              onValidityChange={(value: boolean) => {
+                setIsFormValid(value);
+              }}
             />
           ) : (
             <Loader />
@@ -156,6 +162,7 @@ const Questions: React.FC = () => {
       }
       buttonText='Next'
       onButtonClick={handleNextClick}
+      buttonDisabled={!isFormValid}
     />
   );
 };
