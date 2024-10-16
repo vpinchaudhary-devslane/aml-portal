@@ -33,5 +33,11 @@ export enum LearnerJourneyActionType {
 export enum CSRFTokenActionType {
   FETCH_CSRF_TOKEN = 'fetch/csrf/token',
   FETCH_CSRF_TOKEN_COMPLETED = 'fetch/csrf/token/completed',
-  FETCH_CSRF_TOKEN_ERROR = 'fetch/csrf/token/failed',
+  FETCH_CSRF_TOKEN_ERROR = 'fetch/csrf/token/error',
+}
+
+export enum LogicEngineActionType {
+  FETCH_LOGIC_ENGINE_EVALUATION = 'fetch/learner/evaluation',
+  FETCH_LOGIC_ENGINE_EVALUATION_COMPLETED = 'fetch/learner/evaluation/completed',
+  FETCH_LOGIC_ENGINE_EVALUATION_ERROR = 'fetch/learner/evaluation/error',
 }

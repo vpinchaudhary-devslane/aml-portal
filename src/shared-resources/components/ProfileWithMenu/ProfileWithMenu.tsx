@@ -4,14 +4,19 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import './ProfileWithMenu.scss';
+import { getUserInitials } from 'shared-resources/utils/helpers';
 
 type Props = {
   learnerId?: number;
   onLogout?: () => void;
+  username?: string;
 };
 
-const ProfileWithMenu: React.FC<Props> = ({ onLogout, learnerId }) => {
-  // const avatarText = useMemo(() => getUserAvatarText(user), [user]);
+const ProfileWithMenu: React.FC<Props> = ({
+  onLogout,
+  learnerId,
+  username,
+}) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -25,11 +30,8 @@ const ProfileWithMenu: React.FC<Props> = ({ onLogout, learnerId }) => {
     <>
       <div className='flex gap-3.5 justify-center items-center'>
         <div className='flex flex-col items-end gap-2 text-base font-medium font-roboto'>
-          <p className='max-w-[182px] truncate'>
-            {/* {getUserFullName(user)?.toUpperCase()} */}
-            LR
-          </p>
-          <p className='max-w-[182px] truncate text-[#A5A5A5]'>Learner</p>
+          <p className='max-w-[182px] truncate'>{username}</p>
+          {/* <p className='max-w-[182px] truncate text-[#A5A5A5]'>Learner</p> */}
         </div>
         <IconButton
           onClick={handleClick}
@@ -40,8 +42,7 @@ const ProfileWithMenu: React.FC<Props> = ({ onLogout, learnerId }) => {
           className='!p-0'
         >
           <Avatar className='!h-[75px] !w-[75px] !bg-primary border-4 border-disabled'>
-            {/* {avatarText} */}
-            User
+            {getUserInitials(username || 'U')}
           </Avatar>
         </IconButton>
       </div>

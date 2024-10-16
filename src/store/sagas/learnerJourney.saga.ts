@@ -7,6 +7,7 @@ import {
 } from 'store/actions/learnerJourney.actions';
 import { learnerJourneyService } from 'services/api-services/learnerJourneyService';
 import { questionSetFetchAction } from 'store/actions/questionSet.actions';
+import { navigateTo } from 'store/actions/navigation.action';
 
 function* LearnerJourneyFetchSaga({
   payload,
@@ -17,7 +18,11 @@ function* LearnerJourneyFetchSaga({
     });
     yield put(fetchLearnerJourneyCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
+      yield put(navigateTo('/continue-journey'));
       yield put(questionSetFetchAction(response.result.data.question_set_id));
+    } else if (response.responseCode === 'OK' && !response?.result?.data) {
+      yield put(navigateTo('/welcome'));
+      // call logic engine API from here
     }
   } catch (e: any) {
     yield put(

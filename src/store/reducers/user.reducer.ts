@@ -1,14 +1,13 @@
 import produce from 'immer';
+import { User } from 'models/entities/User';
 import { Reducer } from 'redux';
 import { AuthActionType } from 'store/actions/actions.constants';
 
 export interface UserState {
-  learnerId: string;
+  user?: User;
 }
 
-const initialState: UserState = {
-  learnerId: '',
-};
+const initialState: UserState = {};
 
 export const userReducer: Reducer<UserState> = (
   // eslint-disable-next-line @typescript-eslint/default-param-last
@@ -17,9 +16,11 @@ export const userReducer: Reducer<UserState> = (
 ) =>
   produce(state, (draft: UserState) => {
     switch (action.type) {
-      case AuthActionType.LOGIN_COMPLETED: {
-        const learnerId = action.payload.identifier as string;
-        draft.learnerId = learnerId;
+      case AuthActionType.LOGIN_COMPLETED:
+      case AuthActionType.FETCH_ME_COMPLETED: {
+        const user = action.payload as User;
+        console.log('HERE', action.payload);
+        draft.user = user;
         break;
       }
       default: {

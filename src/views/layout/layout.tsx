@@ -6,6 +6,7 @@ import { authLogoutAction } from '../../store/actions/auth.action';
 import {
   isAuthLoadingSelector,
   learnerIdSelector,
+  loggedInUserSelector,
 } from '../../store/selectors/auth.selector';
 import { webRoutes } from '../../utils/constants/webRoutes.constants';
 import Header from './Header';
@@ -16,14 +17,15 @@ const Layout: React.FC = () => {
   const dispatch = useDispatch();
 
   const isUserLoading = useSelector(isAuthLoadingSelector);
-  const loggedInUser = useSelector(learnerIdSelector);
+  const learnerId = useSelector(learnerIdSelector);
+  const userSelector = useSelector(loggedInUserSelector);
 
   useEffect(() => {
-    if (location.pathname === '/' && !isUserLoading && !loggedInUser) {
+    if (location.pathname === '/' && !isUserLoading && !learnerId) {
       navigate(webRoutes.auth.login());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, loggedInUser, isUserLoading]);
+  }, [location, learnerId, isUserLoading]);
 
   const onLogout = () => {
     dispatch(authLogoutAction());
@@ -35,7 +37,7 @@ const Layout: React.FC = () => {
   return isUserLoading ? null : (
     <AuthContext.Provider value={authContextValue}>
       <div className='flex flex-col h-full'>
-        <Header leanrerId={loggedInUser} />
+        <Header leanrerId={learnerId} username={userSelector?.username} />
         <div className='flex-1 overflow-hidden'>
           <Outlet />
         </div>

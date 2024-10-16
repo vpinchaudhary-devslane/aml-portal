@@ -10,7 +10,6 @@ import {
   AuthLoginActionPayloadType,
   authLoginCompletedAction,
   authLoginErrorAction,
-  authLogoutAction,
 } from 'store/actions/auth.action';
 import { authService } from 'services/api-services/AuthService';
 import { localStorageService } from 'services/LocalStorageService';
@@ -30,11 +29,7 @@ function* loginSaga(data: LoginSagaPayloadType): any {
     if (response.responseCode === 'OK' && response?.result?.data) {
       yield put(authLoginCompletedAction(response?.result?.data));
       yield put(fetchLearnerJourney(response?.result?.data?.identifier));
-      yield put(navigateTo('/continue-journey'));
-    } else if (response.responseCode === 'OK' && !response?.result?.data) {
-      yield put(navigateTo('/welcome'));
     }
-    // localStorageService.setAuthToken(response?.token?.token);
   } catch (e: any) {
     yield put(
       authLoginErrorAction((e?.errors && e.errors[0]?.message) || e?.message)

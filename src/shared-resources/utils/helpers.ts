@@ -1,19 +1,18 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { QuestionType } from 'models/enums/QuestionType.enum';
-import { User } from '../../models/entities/User';
 
-// export const getUserAvatarText = (user?: User) => {
-//   if (!user) {
-//     return 'AB';
-//   }
-//   let text = user.first_name[0];
-//   if (user.last_name) {
-//     text += user.last_name[0];
-//   } else if (user.first_name.length > 1) {
-//     text += user.first_name[1];
-//   }
-//   return text.toUpperCase();
-// };
+export function getUserInitials(name: string): string {
+  // Trim and split the string into an array of words
+  const words = name.trim().split(/\s+/);
+
+  // Get the first letter of the first word and the first letter of the last word
+  const firstInitial = words[0][0].toUpperCase();
+  const lastInitial =
+    words.length > 1 ? words[words.length - 1][0].toUpperCase() : '';
+
+  // Return the initials
+  return firstInitial + lastInitial;
+}
 
 // export const getUserFullName = (user?: User) =>
 //   [user?.first_name, user?.last_name]

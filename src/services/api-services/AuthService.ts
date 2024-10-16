@@ -9,7 +9,7 @@ class AuthService {
   async login(data: {
     username: string;
     password: string;
-  }): Promise<{ user: User; token: string }> {
+  }): Promise<{ user: User }> {
     return baseApiService.post('/auth/login', 'api.auth.login', data, {
       extras: { useAuth: false },
     });

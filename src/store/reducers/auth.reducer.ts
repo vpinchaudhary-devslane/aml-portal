@@ -27,6 +27,7 @@ export const authReducer: Reducer<AuthState> = (
       case AuthActionType.LOGIN_COMPLETED:
       case AuthActionType.FETCH_ME_COMPLETED: {
         draft.learnerId = action.payload.identifier;
+        draft.user = action.payload;
         draft.loading = false;
         draft.error = undefined;
         break;
