@@ -8,7 +8,10 @@ class LogicEngineEvalutionService {
   async fetchLogicEngineEvaluation(data: {
     learner_id: string;
   }): Promise<{ data: { question_set_id: string } }> {
-    return baseApiService.get(`/learner/evaluate/${data.learner_id}`);
+    return baseApiService.post(
+      `/learner/evaluate/${data.learner_id}`,
+      'api.learner.evaluate'
+    );
   }
 }
 
