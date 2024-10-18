@@ -14,6 +14,11 @@ export const isAuthLoadingSelector = createSelector(
   (state: AuthState) => Boolean(state.loading)
 );
 
+export const authErrorSelector = createSelector(
+  [authState],
+  (state: AuthState) => state.error
+);
+
 export const loggedInUserSelector = createSelector(
   [authState],
   (state: AuthState) => state.user

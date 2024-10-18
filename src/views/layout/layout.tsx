@@ -38,7 +38,7 @@ const Layout: React.FC = () => {
     <AuthContext.Provider value={authContextValue}>
       <div className='flex flex-col h-full'>
         <Header leanrerId={learnerId} username={userSelector?.username} />
-        <div className='flex-1 overflow-hidden'>
+        <div className='flex-1'>
           <Outlet />
         </div>
       </div>

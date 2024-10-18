@@ -1,16 +1,17 @@
 import React, { useEffect } from 'react';
 import { Form, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import * as yup from 'yup';
 import { fetchCSRFToken } from 'store/actions/csrfToken.action';
 import { localStorageService } from 'services/LocalStorageService';
+import { authErrorSelector } from 'store/selectors/auth.selector';
 import { authLoginAction } from '../../store/actions/auth.action';
 import FormikInput from '../../shared-resources/components/Input/FormikInput';
 import Button from '../../shared-resources/components/Button/Button';
 
 const Login: React.FC = () => {
   const dispatch = useDispatch();
-
+  const errorCode = useSelector(authErrorSelector);
   useEffect(() => {
     localStorageService.removeCSRFToken();
     if (!localStorageService.getCSRFToken()) {
@@ -32,8 +33,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className='flex flex-col'>
-      <p className='text-4xl font-semibold text-headingTextColor ml-[60px] pt-[23px] pb-[22px] px-[7px]'>
+    <div className='flex flex-col h-full'>
+      <p className='md:w-[65%] md:text-center text-3xl md:text-4xl font-semibold text-headingTextColor pl-8 pt-6 pb-4'>
         Welcome to Assisted Math Learning
       </p>
 
@@ -48,45 +49,62 @@ const Login: React.FC = () => {
         validateOnBlur={false} // Validate only when the field loses focus (onBlur)
       >
         {(formikProps) => {
-          // Check if both fields have values (without worrying about validation)
           const areFieldsFilled =
             !!formikProps.values.username && !!formikProps.values.password;
 
           return (
-            <Form>
-              <div className='flex gap-[85px] items-end'>
-                <div className='w-[962px] h-3/5 p-20 border-[1px] ml-[60px] border-black mt-[61px] flex flex-col gap-[59px] items-center'>
-                  <p className='text-4xl font-semibold text-headingTextColor pt-[23px] pb-[22px] text-center'>
+            <Form className='h-full'>
+              <div className='flex flex-col md:flex-row gap-6 items-center md:items-end justify-center p-6 overflow-y-auto md:h-[80%] max-h-full'>
+                {/* Input container */}
+                <div className='w-full h-full md:w-[65%] p-8 border border-black mt-6 flex flex-col gap-6 md:gap-14 items-center justify-center md:ml-6'>
+                  {/* Title */}
+                  <p className='text-2xl md:text-3xl font-semibold text-headingTextColor py-2 text-center'>
                     LOGIN
                   </p>
-                  <div className='flex flex-col gap-[34px]'>
-                    <div className='flex gap-4 items-start'>
-                      <p className='text-2xl w-36 text-headingTextColor translate-y-1/2'>
+
+                  {/* Username & Password Inputs */}
+                  <div className='flex flex-col gap-6 md:gap-8 w-full max-w-96 px-4 md:px-0'>
+                    <div className='flex flex-col md:flex-row gap-2 md:gap-4 items-center justify-between'>
+                      <p className='text-lg md:text-2xl w-full md:w-36 text-headingTextColor'>
                         USERNAME
                       </p>
                       <FormikInput
                         name='username'
-                        className='w-[236px]'
-                        onBlur={formikProps.handleBlur} // Handle blur event for validation
+                        className='w-full md:w-[236px]'
+                        onBlur={formikProps.handleBlur}
                       />
                     </div>
-                    <div className='flex gap-4 items-start'>
-                      <p className='text-2xl w-36 text-headingTextColor translate-y-1/2'>
+
+                    <div className='flex flex-col md:flex-row gap-2 md:gap-4 items-center justify-between'>
+                      <p className='text-lg md:text-2xl w-full md:w-36 text-headingTextColor'>
                         PASSWORD
                       </p>
                       <FormikInput
                         name='password'
                         type='password'
-                        className='w-[236px]'
-                        onBlur={formikProps.handleBlur} // Handle blur event for validation
+                        className='w-full md:w-[236px]'
+                        onBlur={formikProps.handleBlur}
                       />
                     </div>
                   </div>
+
+                  {/* Error Message */}
+                  {errorCode === 'INVALID_CREDENTIALS' ||
+                    (errorCode === 'LEARNER_NOT_FOUND' && (
+                      <div className='flex flex-col text-sm text-red-500 font-semibold text-center'>
+                        <span>Your username or password is incorrect.</span>
+                        <span>Please try again.</span>
+                      </div>
+                    ))}
                 </div>
 
-                <div className='pb-16'>
-                  {/* Button gets enabled as soon as both fields have values */}
-                  <Button type='submit' disabled={!areFieldsFilled}>
+                {/* Submit Button */}
+                <div className='w-full md:w-auto mt-8 mb-10 md:mt-0 flex justify-center'>
+                  <Button
+                    type='submit'
+                    className='w-[236px]' // Maintaining button size
+                    disabled={!areFieldsFilled}
+                  >
                     Login
                   </Button>
                 </div>

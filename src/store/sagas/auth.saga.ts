@@ -32,7 +32,7 @@ function* loginSaga(data: LoginSagaPayloadType): any {
     }
   } catch (e: any) {
     yield put(
-      authLoginErrorAction((e?.errors && e.errors[0]?.message) || e?.message)
+      authLoginErrorAction(e?.response?.data?.error?.code || e?.message)
     );
   }
 }
