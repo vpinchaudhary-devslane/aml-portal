@@ -14,7 +14,6 @@ function* SyncLearnerResponseSaga({
       syncLearnerResponseService.syncLearnerResponse,
       payload
     );
-    console.log('DATA saved successfully', response);
     // not needed
     // yield put(syncLearnerResponseCompleted(response.result?.data?.message));
     if (response?.responseCode === 'OK') {
@@ -31,11 +30,38 @@ function* SyncLearnerResponseSaga({
   }
 }
 
+function* SyncLearnerResponseTimelySaga({
+  payload,
+}: StoreAction<SyncLearnerResponseActionType>): any {
+  try {
+    const response = yield call(
+      syncLearnerResponseService.syncLearnerResponse,
+      payload
+    );
+    // not needed
+    // yield put(syncLearnerResponseCompleted(response.result?.data?.message));
+    if (response?.responseCode === 'OK') {
+      // clearing local storage now as data sync completed
+      localStorageService.deleteLearnerResponseData(payload.learner_id);
+    }
+  } catch (e: any) {
+    yield put(
+      syncLearnerResponseError(
+        (e?.errors && e.errors[0]?.message) || e?.message
+      )
+    );
+  }
+}
+
 function* syncLearnerResponseSaga() {
   yield all([
     takeLatest(
       SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE,
       SyncLearnerResponseSaga
+    ),
+    takeLatest(
+      SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_TIMELY,
+      SyncLearnerResponseTimelySaga
     ),
   ]);
 }

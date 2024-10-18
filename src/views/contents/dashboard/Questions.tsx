@@ -41,47 +41,39 @@ const Questions: React.FC = () => {
   useEffect(() => {
     if (questionSet?.questions) {
       const { questions } = questionSet;
+
       if (questions) {
         const transformedQuestions = transformQuestions(questions);
+
         // Retrieve saved responses from local storage
         const savedResponses = localStorageService.getLearnerResponseData(
           String(learnerId)
         );
-        if (savedResponses?.length) {
-          // If local storage data is present, use it to find the first unanswered question
-          const answeredQuestionIds =
-            savedResponses?.map((response: any) => response.question_id) || [];
-          const firstUnansweredIndex = transformedQuestions.findIndex(
-            (question: any) =>
-              !answeredQuestionIds.includes(question.questionId)
-          );
-          setQuestions(transformedQuestions);
-          setCurrentQuestionIndex(
-            firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
-          );
-        } else if (
-          learnerJourney &&
-          learnerJourney?.completed_question_ids?.length
-        ) {
-          // If no local storage data, use completedQuestionIds from API
-          const firstUnansweredIndex = transformedQuestions.findIndex(
-            (question: any) =>
-              !(learnerJourney.completed_question_ids as string[]).includes(
-                question.questionId
-              )
-          );
-          setQuestions(transformedQuestions);
-          setCurrentQuestionIndex(
-            firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
-          );
-        } else {
-          // Fallback to start from 0th question if both are null
-          setQuestions(transformedQuestions);
-          setCurrentQuestionIndex(0);
-        }
+        const localStorageAnsweredIds =
+          savedResponses?.map((response: any) => response.question_id) || [];
+
+        // Retrieve completed question ids from the API (learnerJourney)
+        const apiAnsweredIds = learnerJourney?.completed_question_ids || [];
+
+        // Combine the ids from local storage and API, making sure no duplicates
+        const combinedAnsweredIds = [
+          ...new Set([...apiAnsweredIds, ...localStorageAnsweredIds]),
+        ];
+
+        // Determine the first unanswered question based on the combinedAnsweredIds
+        const firstUnansweredIndex = transformedQuestions.findIndex(
+          (question: any) => !combinedAnsweredIds.includes(question.questionId)
+        );
+
+        setQuestions(transformedQuestions);
+
+        // Set the current question index based on the first unanswered question
+        setCurrentQuestionIndex(
+          firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
+        );
       }
     }
-  }, [questionSet]);
+  }, [questionSet, learnerJourney]);
 
   const handleNextClick = () => {
     if (questionRef.current) {
