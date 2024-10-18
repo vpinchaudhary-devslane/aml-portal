@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { navigationPathSelector } from 'store/selectors/navigation.selector';
 import { localStorageService } from 'services/LocalStorageService';
 import { learnerIdSelector } from 'store/selectors/auth.selector';
-import { syncLearnerResponseTimely } from 'store/actions/syncLearnerResponse.action';
+import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
 
 // Define props for NavigationHandler
 type NavigationHandlerProps = {
@@ -32,13 +32,13 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
 
     if (learnerId) {
       // Start syncing if the user is authenticated
-      const syncLearnerResponse = () => {
+      const syncLearnerResponseData = () => {
         const data =
           localStorageService.getLearnerResponseData(String(learnerId)) || [];
 
         if (data.length > 0) {
           dispatch(
-            syncLearnerResponseTimely({
+            syncLearnerResponse({
               learner_id: learnerId,
               questions_data: data,
             })
@@ -47,9 +47,9 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
       };
 
       // Sync every 2 minutes (120000ms)
-      intervalId = setInterval(syncLearnerResponse, 120000);
+      intervalId = setInterval(syncLearnerResponseData, 120000);
       // Initial sync on component mount
-      syncLearnerResponse();
+      syncLearnerResponseData();
     }
     // Cleanup function to clear the interval when the user logs out
     return () => {

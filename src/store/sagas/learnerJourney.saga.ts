@@ -29,7 +29,7 @@ function* LearnerJourneyFetchSaga({
       yield put(navigateTo('/continue-journey'));
       yield put(questionSetFetchAction(response.result.data.question_set_id));
     } else {
-      yield put(navigateTo('/welcome'));
+      // yield put(navigateTo('/welcome'));
       yield put(fetchLogicEngineEvaluation(payload));
     }
   } catch (e: any) {

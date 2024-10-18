@@ -5,11 +5,6 @@ export const syncLearnerResponse = (data: any) => ({
   payload: data,
 });
 
-export const syncLearnerResponseTimely = (data: any) => ({
-  type: SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_TIMELY,
-  payload: data,
-});
-
 export const syncLearnerResponseCompleted = (message: string) => ({
   type: SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_COMPLETED,
   payload: message,
