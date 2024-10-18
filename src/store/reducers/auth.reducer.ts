@@ -8,9 +8,12 @@ export interface AuthState {
   loading?: boolean;
   error?: string;
   user?: User;
+  isLoggingOut: boolean;
 }
 
-const initialState: AuthState = {};
+const initialState: AuthState = {
+  isLoggingOut: false,
+};
 
 export const authReducer: Reducer<AuthState> = (
   // eslint-disable-next-line @typescript-eslint/default-param-last
@@ -36,6 +39,14 @@ export const authReducer: Reducer<AuthState> = (
       case AuthActionType.FETCH_ME_ERROR: {
         draft.loading = false;
         draft.error = action.payload;
+        break;
+      }
+      case AuthActionType.LOGOUT: {
+        draft.isLoggingOut = true;
+        break;
+      }
+      case AuthActionType.LOGOUT_COMPLETED: {
+        draft.isLoggingOut = false;
         break;
       }
       default:

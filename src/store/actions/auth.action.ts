@@ -37,3 +37,7 @@ export const authFetchMeErrorAction = (message: string) => ({
 export const authLogoutAction = () => ({
   type: AuthActionType.LOGOUT,
 });
+
+export const authLogoutCompletedAction = () => ({
+  type: AuthActionType.LOGOUT_COMPLETED,
+});

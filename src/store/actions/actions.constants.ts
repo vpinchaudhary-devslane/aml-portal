@@ -10,6 +10,7 @@ export enum AuthActionType {
 
   RESET = 'store/reset',
   LOGOUT = 'store/logout',
+  LOGOUT_COMPLETED = 'store/logout/completed',
 }
 
 export enum QuestionSetActionType {

@@ -1,5 +1,5 @@
 import { SagaPayloadType } from 'types/SagaPayload.type';
-import { all, call, put, takeLatest } from 'redux-saga/effects';
+import { all, call, delay, put, takeLatest } from 'redux-saga/effects';
 import {
   AuthActionType,
   CSRFTokenActionType,
@@ -10,6 +10,7 @@ import {
   AuthLoginActionPayloadType,
   authLoginCompletedAction,
   authLoginErrorAction,
+  authLogoutCompletedAction,
 } from 'store/actions/auth.action';
 import { authService } from 'services/api-services/AuthService';
 import { localStorageService } from 'services/LocalStorageService';
@@ -67,6 +68,7 @@ function* logoutSaga(): any {
     if (response) {
       localStorageService.removeCSRFToken();
       yield put(navigateTo('/login'));
+      yield put(authLogoutCompletedAction());
     }
   } catch (e: any) {
     localStorageService.removeCSRFToken();
