@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Formik } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 import * as yup from 'yup';
@@ -12,6 +12,17 @@ import Button from '../../shared-resources/components/Button/Button';
 const Login: React.FC = () => {
   const dispatch = useDispatch();
   const errorCode = useSelector(authErrorSelector);
+  const [showError, setShowError] = useState(false);
+  useEffect(() => {
+    if (
+      errorCode === 'INVALID_CREDENTIALS' ||
+      errorCode === 'LEARNER_NOT_FOUND'
+    ) {
+      setShowError(true);
+    } else {
+      setShowError(false);
+    }
+  }, [errorCode]);
   useEffect(() => {
     localStorageService.removeCSRFToken();
     if (!localStorageService.getCSRFToken()) {
@@ -89,13 +100,12 @@ const Login: React.FC = () => {
                   </div>
 
                   {/* Error Message */}
-                  {errorCode === 'INVALID_CREDENTIALS' ||
-                    (errorCode === 'LEARNER_NOT_FOUND' && (
-                      <div className='flex flex-col text-sm text-red-500 font-semibold text-center'>
-                        <span>Your username or password is incorrect.</span>
-                        <span>Please try again.</span>
-                      </div>
-                    ))}
+                  {showError && (
+                    <div className='flex flex-col text-sm text-red-500 font-semibold text-center'>
+                      <span>Your username or password is incorrect.</span>
+                      <span>Please try again.</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Submit Button */}
