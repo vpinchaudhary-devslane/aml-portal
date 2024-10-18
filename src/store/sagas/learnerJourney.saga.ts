@@ -9,6 +9,8 @@ import { learnerJourneyService } from 'services/api-services/learnerJourneyServi
 import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
 import { fetchLogicEngineEvaluation } from 'store/actions/logicEngineEvaluation.action';
+import { LearnerJourneyStatus } from 'models/enums/learnerJourney.enum';
+import { localStorageService } from 'services/LocalStorageService';
 
 function* LearnerJourneyFetchSaga({
   payload,
@@ -18,10 +20,15 @@ function* LearnerJourneyFetchSaga({
       learner_id: payload,
     });
     yield put(fetchLearnerJourneyCompleted(response.result?.data));
-    if (response?.result?.data?.question_set_id) {
+    if (
+      (response.responseCode === 'OK' &&
+        response?.result?.data?.question_set_id &&
+        response?.result?.data?.status === LearnerJourneyStatus.IN_PROGRESS) ||
+      !!localStorageService.getLearnerResponseData(payload)
+    ) {
       yield put(navigateTo('/continue-journey'));
       yield put(questionSetFetchAction(response.result.data.question_set_id));
-    } else if (response.responseCode === 'OK' && !response?.result?.data) {
+    } else {
       yield put(navigateTo('/welcome'));
       yield put(fetchLogicEngineEvaluation(payload));
     }

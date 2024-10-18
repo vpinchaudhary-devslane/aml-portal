@@ -75,7 +75,7 @@ export function convertResponseToLearnerResponse(
   questionSetId: string
 ): QuestionData[] {
   return response.map((item) => {
-    const { questionId, answers } = item;
+    const { questionId, start_time, end_time, answers } = item;
 
     let result = '';
     let answer_top = '';
@@ -105,6 +105,8 @@ export function convertResponseToLearnerResponse(
     // Return the transformed question data
     return {
       question_id: questionId,
+      ...(start_time && { start_time }), // Include start_time only if it has a value
+      ...(end_time && { end_time }), // Include end_time only if it has a value
       question_set_id: questionSetId,
       learner_response,
     };

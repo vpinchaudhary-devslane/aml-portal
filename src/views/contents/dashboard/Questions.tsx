@@ -1,6 +1,6 @@
-import { QuestionType } from 'models/enums/QuestionType.enum';
 import React, { useEffect, useState, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { localStorageService } from 'services/LocalStorageService';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
 import Loader from 'shared-resources/components/Loader/Loader';
 import Question from 'shared-resources/components/Question';
@@ -8,6 +8,9 @@ import {
   convertResponseToLearnerResponse,
   transformQuestions,
 } from 'shared-resources/utils/helpers';
+import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
+import { learnerIdSelector } from 'store/selectors/auth.selector';
+import { learnerJourneySelector } from 'store/selectors/learnerJourney.selector';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 
 const Questions: React.FC = () => {
@@ -15,6 +18,9 @@ const Questions: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFormValid, setIsFormValid] = useState(false);
   const questionSet = useSelector(questionsSetSelector);
+  const learnerId = useSelector(learnerIdSelector);
+  const learnerJourney = useSelector(learnerJourneySelector);
+  const dispatch = useDispatch();
   const [submittedAnswers, setSubmittedAnswers] = useState<
     {
       topAnswer: string[];
@@ -24,72 +30,55 @@ const Questions: React.FC = () => {
       fibAnswer: string;
       mcqAnswer: string;
       questionId: string;
+      start_time?: string;
+      end_time?: string;
     }[]
   >([]);
   const questionRef = useRef<{
     submitForm: () => void;
   } | null>(null);
 
-  // useEffect(() => {
-  //   const fetchQuestions = async () => {
-  //     const mockQuestions = [
-  //       {
-  //         answers: {
-  //           result: '1234',
-  //           isPrefil: true,
-  //           answerTop: '3339',
-  //           answerResult: '233338',
-  //         },
-  //         numbers: { n1: '23326', n2: '25622' },
-  //         questionType: QuestionType.GRID_1,
-  //         description: { en: 'Solve' },
-  //         questionId: '1',
-  //       },
-  //       {
-  //         answers: {
-  //           result: '5678',
-  //           isPrefil: true,
-  //           answerTop: 'BBBB',
-  //           answerResult: 'BBBBBB',
-  //         },
-  //         numbers: { n1: '43326', n2: '55622' },
-  //         questionType: QuestionType.GRID_1,
-  //         description: { en: 'Solve' },
-  //         questionId: '2',
-  //       },
-  //       {
-  //         numbers: { n1: '756', n2: '53552' },
-  //         questionType: QuestionType.GRID_2,
-  //         description: { en: 'Write numbers as per their place values' },
-  //         questionId: '3',
-  //       },
-  //       {
-  //         questionType: QuestionType.FIB,
-  //         numbers: { n1: '7', n2: '2200' },
-  //         description: { en: 'Solve' },
-  //         questionId: '4',
-  //       },
-  //       {
-  //         numbers: { n1: '45', n2: '4567' },
-  //         options: ['7645', '5434', '6582', '6541', '', ''],
-  //         questionType: QuestionType.MCQ,
-  //         description: { en: 'Choose the correct option' },
-  //         questionId: '5',
-  //       },
-  //     ];
-  //     setQuestions(mockQuestions);
-  //   };
-  //   fetchQuestions();
-  // }, []);
-
   useEffect(() => {
     if (questionSet?.questions) {
       const { questions } = questionSet;
-      console.log('HERE', questions);
       if (questions) {
         const transformedQuestions = transformQuestions(questions);
-        console.log('Transformed', transformedQuestions);
-        setQuestions(transformedQuestions);
+        // Retrieve saved responses from local storage
+        const savedResponses = localStorageService.getLearnerResponseData(
+          String(learnerId)
+        );
+        if (savedResponses?.length) {
+          // If local storage data is present, use it to find the first unanswered question
+          const answeredQuestionIds =
+            savedResponses?.map((response: any) => response.question_id) || [];
+          const firstUnansweredIndex = transformedQuestions.findIndex(
+            (question: any) =>
+              !answeredQuestionIds.includes(question.questionId)
+          );
+          setQuestions(transformedQuestions);
+          setCurrentQuestionIndex(
+            firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
+          );
+        } else if (
+          learnerJourney &&
+          learnerJourney?.completed_question_ids?.length
+        ) {
+          // If no local storage data, use completedQuestionIds from API
+          const firstUnansweredIndex = transformedQuestions.findIndex(
+            (question: any) =>
+              !(learnerJourney.completed_question_ids as string[]).includes(
+                question.questionId
+              )
+          );
+          setQuestions(transformedQuestions);
+          setCurrentQuestionIndex(
+            firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
+          );
+        } else {
+          // Fallback to start from 0th question if both are null
+          setQuestions(transformedQuestions);
+          setCurrentQuestionIndex(0);
+        }
       }
     }
   }, [questionSet]);
@@ -98,12 +87,24 @@ const Questions: React.FC = () => {
     if (questionRef.current) {
       questionRef.current.submitForm();
     }
+    if (questions.length === currentQuestionIndex && learnerId) {
+      const learnerResponseData = localStorageService.getLearnerResponseData(
+        String(learnerId)
+      );
+      dispatch(
+        syncLearnerResponse({
+          learner_id: learnerId,
+          questions_data: learnerResponseData,
+        })
+      );
+    }
   };
 
   const handleQuestionSubmit = (gridData: any) => {
-    setSubmittedAnswers((prev) => [
-      ...prev,
-      {
+    const currentTime = new Date().toISOString(); // Capture the current time
+
+    setSubmittedAnswers((prev) => {
+      const newAnswer = {
         topAnswer: gridData.topAnswer,
         resultAnswer: gridData.resultAnswer,
         row1Answers: gridData?.row1Answers,
@@ -111,8 +112,21 @@ const Questions: React.FC = () => {
         fibAnswer: gridData?.fibAnswer,
         mcqAnswer: gridData?.mcqAnswer,
         questionId: gridData.questionId,
-      },
-    ]);
+        start_time: '',
+        end_time: '',
+      };
+      // Add start_time to the first question
+      if (currentQuestionIndex === 0) {
+        newAnswer.start_time = currentTime;
+      }
+
+      // Add end_time to the last question
+      if (currentQuestionIndex === questions.length - 1) {
+        newAnswer.end_time = currentTime;
+      }
+
+      return [...prev, newAnswer];
+    });
     setCurrentQuestionIndex((prev) => prev + 1); // Move to next question
   };
 
@@ -121,8 +135,10 @@ const Questions: React.FC = () => {
   useEffect(() => {
     // will check for refactoring after v1 release
     const filteredAnswers = submittedAnswers.map(
-      ({ questionId, ...answers }) => ({
+      ({ questionId, start_time, end_time, ...answers }) => ({
         questionId,
+        start_time,
+        end_time,
         answers: Object.fromEntries(
           Object.entries(answers).filter(([_, value]) => value !== undefined)
         ),
@@ -133,7 +149,9 @@ const Questions: React.FC = () => {
         filteredAnswers,
         questionSet?.identifier
       );
-      console.log('PAYLOAD', payload);
+      if (!!learnerId && payload.length) {
+        localStorageService.saveLearnerResponseData(String(learnerId), payload);
+      }
     }
   }, [submittedAnswers]);
 
@@ -142,7 +160,7 @@ const Questions: React.FC = () => {
       headerText={
         questions[currentQuestionIndex]?.description?.en
           ? `${questions[currentQuestionIndex]?.description?.en}`
-          : 'Loading...'
+          : ''
       }
       content={
         <div className='text-4xl font-semibold text-headingTextColor'>
@@ -156,7 +174,8 @@ const Questions: React.FC = () => {
               }}
             />
           ) : (
-            <Loader />
+            // <Loader />
+            'Congratulations!! You have completed this question set please click start to start next question set'
           )}
         </div>
       }

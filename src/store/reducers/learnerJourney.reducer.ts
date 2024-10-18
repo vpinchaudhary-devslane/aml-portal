@@ -4,13 +4,12 @@ import { LearnerJourney } from 'models/entities/LearnerJourney';
 import { LearnerJourneyActionType } from 'store/actions/actions.constants';
 
 export interface LearnerJourneyState {
-  learnerJourney: LearnerJourney | {};
+  learnerJourney?: LearnerJourney;
   loading?: boolean;
   error?: string;
 }
 
 const initialState: LearnerJourneyState = {
-  learnerJourney: {},
   loading: false,
 };
 

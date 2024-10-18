@@ -91,6 +91,54 @@ export class LocalStorageService {
 
     return null;
   }
+
+  saveLearnerResponseData(learnerId: string, newData: any[]) {
+    try {
+      // Get the existing data from localStorage
+      const existingData = this.getLearnerResponseData(learnerId) || [];
+      // Create a map to track the latest response for each questionId
+      const responseMap = new Map();
+      // Add existing responses to the map (ensuring no duplicates yet)
+      existingData.forEach((response: any) => {
+        responseMap.set(response.question_id, response);
+      });
+      // Iterate over the new data and update the map with the latest responses
+      newData.forEach((response: any) => {
+        responseMap.set(response.question_id, response); // Update or add new response
+      });
+      // Convert the map back to an array and save it in localStorage
+      const mergedData = Array.from(responseMap.values());
+      localStorage.setItem(learnerId, JSON.stringify(mergedData));
+    } catch (error) {
+      console.error('Error saving data to LocalStorage:', error);
+    }
+  }
+
+  getLearnerResponseData(learnerId: string) {
+    try {
+      const storedData = localStorage.getItem(learnerId);
+      return storedData ? JSON.parse(storedData) : null;
+    } catch (error) {
+      console.error('Error getting data from LocalStorage:', error);
+      return null;
+    }
+  }
+
+  deleteLearnerResponseData(learnerId: string) {
+    try {
+      localStorage.removeItem(learnerId);
+    } catch (error) {
+      console.error('Error removing data from LocalStorage:', error);
+    }
+  }
+
+  clearAll() {
+    try {
+      localStorage.clear();
+    } catch (error) {
+      console.error('Error clearing LocalStorage:', error);
+    }
+  }
 }
 
 export const localStorageService = LocalStorageService.getInstance();
