@@ -6,6 +6,7 @@ import Axios, {
   CancelTokenSource,
   RawAxiosRequestHeaders,
 } from 'axios';
+import * as uuid from 'uuid';
 import { localStorageService } from '../LocalStorageService';
 
 interface RequestConfig extends AxiosRequestConfig {
@@ -93,9 +94,9 @@ export class BaseApiService {
     const payload = {
       id,
       ver: '1.0',
-      ts: '2024-09-20T17:43:49+05:30',
+      ts: new Date(),
       params: {
-        msgid: 'd297e367-7b72-45c1-883c-18005a7ea888',
+        msgid: uuid.v4(),
       },
       request: data,
     };
