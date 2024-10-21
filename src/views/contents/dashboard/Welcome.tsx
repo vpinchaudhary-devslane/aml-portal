@@ -1,22 +1,23 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
 import { loggedInUserSelector } from 'store/selectors/auth.selector';
-import {
-  isLearnerJourneyLoadingSelector,
-  learnerJourneySelector,
-} from 'store/selectors/learnerJourney.selector';
+import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const journeyData = useSelector(learnerJourneySelector);
-  const loading = useSelector(isLearnerJourneyLoadingSelector);
   const userSelector = useSelector(loggedInUserSelector);
+  const questionsSet = useSelector(questionsSetSelector);
+  const [questions, setQuestions] = useState<any>();
+  useEffect(() => {
+    if (questionsSet?.questions) {
+      setQuestions(questionsSet?.questions);
+    }
+  }, [questionsSet]);
 
   const handleStartClick = () => {
-    navigate('/instructions'); // Redirect to questions
+    navigate('/instructions'); // Redirect to instructions
   };
 
   return (
@@ -29,6 +30,7 @@ const Welcome: React.FC = () => {
       }
       buttonText='Start'
       onButtonClick={handleStartClick}
+      buttonDisabled={!questions?.length}
     />
   );
 };
