@@ -28,7 +28,7 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
 
   useEffect(() => {
     // Declare a variable to hold the interval ID
-    let intervalId: NodeJS.Timeout | null = null;
+    let intervalId: any | null = null;
 
     if (learnerId) {
       // Start syncing if the user is authenticated
