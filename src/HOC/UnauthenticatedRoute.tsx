@@ -9,27 +9,31 @@ import { authFetchMeAction } from 'store/actions/auth.action';
 import {
   isAuthLoadingSelector,
   isAuthenticatedSelector,
+  isLoggingOutSelector,
 } from 'store/selectors/auth.selector';
 // components
 import Spinner from 'shared-resources/components/Spinner/Spinner';
+import useCookie from '../hooks/useCookie';
 
 const UnauthenticatedRouteHOC = <P extends {}>(
   Component: React.ComponentType<P>
 ): React.FC<P> => {
   const UnauthenticatedRoute: React.FC<P> = ({ ...props }) => {
     const dispatch = useDispatch();
-
     const isAuthenticated = useSelector(isAuthenticatedSelector);
     const isLoading = useSelector(isAuthLoadingSelector);
+    const isLoggingOut = useSelector(isLoggingOutSelector);
     const prevLink = localStorageService.getLocalStorageValue(PREV_LINK);
+    const hasConnectSid = useCookie('connect.sid');
 
     useEffect(() => {
-      const token = localStorageService.getAuthToken();
-      if (token && !isAuthenticated && !isLoading) {
-        dispatch(authFetchMeAction());
+      if (hasConnectSid && !isAuthenticated && !isLoading && !isLoggingOut) {
+        if (hasConnectSid) {
+          dispatch(authFetchMeAction());
+        }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated, isLoading]);
+    }, [hasConnectSid, isAuthenticated, isLoading]);
 
     if (isLoading) {
       return (

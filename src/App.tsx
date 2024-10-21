@@ -1,8 +1,9 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import store from 'store';
 import { ErrorBoundary } from 'react-error-boundary';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import NavigationHandler from 'shared-resources/components/NavigationHandler';
 import { errorBoundaryHelper } from './utils/helpers/errorBoundary.helper';
 import ErrorFallbackComponent from './utils/components/ErrorFallbackComponent';
 import Loader from './shared-resources/components/Loader/Loader';
@@ -22,26 +23,29 @@ const App: React.FC = () => (
     >
       <Suspense fallback={<Loader />}>
         <BrowserRouter>
-          <RouteWrapper>
-            <Routes>
-              <Route path='/' element={<Layout />}>
-                {LAYOUT_ROUTES.map((route) => (
+          <NavigationHandler>
+            <RouteWrapper>
+              <Routes>
+                <Route path='/' element={<Layout />}>
+                  {LAYOUT_ROUTES.map((route) => (
+                    <Route
+                      path={route.path}
+                      key={route.key}
+                      Component={
+                        route.component &&
+                        AuthenticatedRouteHOC(route.component)
+                      }
+                    />
+                  ))}
                   <Route
-                    path={route.path}
-                    key={route.key}
-                    Component={
-                      route.component && AuthenticatedRouteHOC(route.component)
-                    }
+                    path='/login'
+                    Component={UnauthenticatedRouteHOC(Login)}
                   />
-                ))}
-                <Route
-                  path='/login'
-                  Component={UnauthenticatedRouteHOC(Login)}
-                />
-                <Route path='*' Component={AML404Component} />
-              </Route>
-            </Routes>
-          </RouteWrapper>
+                  <Route path='*' Component={AML404Component} />
+                </Route>
+              </Routes>
+            </RouteWrapper>
+          </NavigationHandler>
         </BrowserRouter>
       </Suspense>
     </ErrorBoundary>

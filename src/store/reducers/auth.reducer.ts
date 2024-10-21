@@ -4,13 +4,16 @@ import { AuthActionType } from 'store/actions/actions.constants';
 import { User } from '../../models/entities/User';
 
 export interface AuthState {
-  userID?: number;
+  learnerId?: number;
   loading?: boolean;
   error?: string;
   user?: User;
+  isLoggingOut: boolean;
 }
 
-const initialState: AuthState = {};
+const initialState: AuthState = {
+  isLoggingOut: false,
+};
 
 export const authReducer: Reducer<AuthState> = (
   // eslint-disable-next-line @typescript-eslint/default-param-last
@@ -26,7 +29,8 @@ export const authReducer: Reducer<AuthState> = (
       }
       case AuthActionType.LOGIN_COMPLETED:
       case AuthActionType.FETCH_ME_COMPLETED: {
-        draft.userID = action.payload.id;
+        draft.learnerId = action.payload.identifier;
+        draft.user = action.payload;
         draft.loading = false;
         draft.error = undefined;
         break;
@@ -35,6 +39,14 @@ export const authReducer: Reducer<AuthState> = (
       case AuthActionType.FETCH_ME_ERROR: {
         draft.loading = false;
         draft.error = action.payload;
+        break;
+      }
+      case AuthActionType.LOGOUT: {
+        draft.isLoggingOut = true;
+        break;
+      }
+      case AuthActionType.LOGOUT_COMPLETED: {
+        draft.isLoggingOut = false;
         break;
       }
       default:

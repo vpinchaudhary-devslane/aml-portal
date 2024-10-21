@@ -3,6 +3,7 @@ import { DecodedToken } from '../types/interfaces';
 
 export const AUTH_TOKEN = 'auth_token';
 export const PREV_LINK = 'prev_link';
+export const CSRF_TOKEN = 'csrf-token';
 
 export class LocalStorageService {
   private static _instance: LocalStorageService;
@@ -57,12 +58,24 @@ export class LocalStorageService {
     this.setLocalStorageValue(AUTH_TOKEN, token);
   }
 
+  setCSRFToken(token: string): void {
+    this.setLocalStorageValue(CSRF_TOKEN, token);
+  }
+
   getAuthToken(): string | null {
     return this.getLocalStorageValue(AUTH_TOKEN);
   }
 
+  getCSRFToken(): string | null {
+    return this.getLocalStorageValue(CSRF_TOKEN);
+  }
+
   removeAuthToken(): void {
     this.removeLocalStorageValue(AUTH_TOKEN);
+  }
+
+  removeCSRFToken(): void {
+    this.removeLocalStorageValue(CSRF_TOKEN);
   }
 
   getTokenExpiry() {
@@ -77,6 +90,54 @@ export class LocalStorageService {
     }
 
     return null;
+  }
+
+  saveLearnerResponseData(learnerId: string, newData: any[]) {
+    try {
+      // Get the existing data from localStorage
+      const existingData = this.getLearnerResponseData(learnerId) || [];
+      // Create a map to track the latest response for each questionId
+      const responseMap = new Map();
+      // Add existing responses to the map (ensuring no duplicates yet)
+      existingData.forEach((response: any) => {
+        responseMap.set(response.question_id, response);
+      });
+      // Iterate over the new data and update the map with the latest responses
+      newData.forEach((response: any) => {
+        responseMap.set(response.question_id, response); // Update or add new response
+      });
+      // Convert the map back to an array and save it in localStorage
+      const mergedData = Array.from(responseMap.values());
+      localStorage.setItem(learnerId, JSON.stringify(mergedData));
+    } catch (error) {
+      console.error('Error saving data to LocalStorage:', error);
+    }
+  }
+
+  getLearnerResponseData(learnerId: string) {
+    try {
+      const storedData = localStorage.getItem(learnerId);
+      return storedData ? JSON.parse(storedData) : null;
+    } catch (error) {
+      console.error('Error getting data from LocalStorage:', error);
+      return null;
+    }
+  }
+
+  deleteLearnerResponseData(learnerId: string) {
+    try {
+      localStorage.removeItem(learnerId);
+    } catch (error) {
+      console.error('Error removing data from LocalStorage:', error);
+    }
+  }
+
+  clearAll() {
+    try {
+      localStorage.clear();
+    } catch (error) {
+      console.error('Error clearing LocalStorage:', error);
+    }
   }
 }
 

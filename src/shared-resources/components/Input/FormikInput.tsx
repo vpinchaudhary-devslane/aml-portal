@@ -12,12 +12,13 @@ const FormikInput: React.FC<FormikInputProps> = (props) => {
   const [, meta, helpers] = useField(name);
 
   const { value, error } = meta;
-  const { setValue } = helpers;
+  const { setValue, setTouched } = helpers; // Set touched on blur
 
   return (
     <Input
       value={value}
       onChange={(e) => setValue(e.target.value)}
+      onBlur={() => setTouched(true)} // Mark field as touched on blur
       error={error}
       {...props}
     />

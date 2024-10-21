@@ -1,18 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-// services
-import { localStorageService } from 'services/LocalStorageService';
-// actions
-import { authFetchMeAction, authLogoutAction } from 'store/actions/auth.action';
-// selectors
+import { authFetchMeAction } from 'store/actions/auth.action';
 import {
   isAuthLoadingSelector,
   isAuthenticatedSelector,
+  isLoggingOutSelector,
+  learnerIdSelector,
 } from 'store/selectors/auth.selector';
-// components
-import Spinner from 'shared-resources/components/Spinner/Spinner';
-// constants
+import Loader from 'shared-resources/components/Loader/Loader';
+import useCookie from '../hooks/useCookie';
 
 const AuthenticatedRouteHOC = <P extends object>(
   Component: React.ComponentType<P>
@@ -20,30 +17,40 @@ const AuthenticatedRouteHOC = <P extends object>(
   const AuthenticatedRoute: React.FC<P> = ({ ...props }) => {
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
-    const navigateTo = useNavigate();
+    const navigate = useNavigate();
 
     const isAuthenticated = useSelector(isAuthenticatedSelector);
     const isLoading = useSelector(isAuthLoadingSelector);
+    const loggedInUser = useSelector(learnerIdSelector);
+    const isLoggingOut = useSelector(isLoggingOutSelector);
+    const [loading, setLoading] = useState(true);
+    const hasConnectSid = useCookie('connect.sid');
 
     useEffect(() => {
-      const token = localStorageService.getAuthToken();
-      const tokenExpiry = localStorageService.getTokenExpiry();
-      const currentTime = new Date();
-      if (token && !isAuthenticated && !isLoading) {
-        dispatch(authFetchMeAction());
+      if (!isAuthenticated) {
+        navigate('/login');
       }
-      if ((token && tokenExpiry && currentTime >= tokenExpiry) || !token) {
-        localStorage.clear();
-        dispatch(authLogoutAction());
-        navigateTo('/login');
+
+      if (hasConnectSid && !isAuthenticated && !isLoading && !isLoggingOut) {
+        if (hasConnectSid) {
+          dispatch(authFetchMeAction());
+        }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated, isLoading, searchParams]);
+    }, [hasConnectSid, isAuthenticated, isLoading, searchParams, isLoggingOut]);
 
-    if (isLoading) {
+    useEffect(() => {
+      if (loggedInUser) {
+        setLoading(false);
+      } else if (!isLoading) {
+        setLoading(false);
+      }
+    }, [loggedInUser, isLoading]);
+
+    if (loading) {
       return (
         <div className='flex items-center justify-center w-screen h-screen'>
-          <Spinner size='lg' />
+          <Loader />
         </div>
       );
     }

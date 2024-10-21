@@ -1,15 +1,15 @@
 import React from 'react';
 import ENV_CONFIG from '../../constant/env.config';
-import { User } from '../../models/entities/User';
 import ProfileWithMenu from '../../shared-resources/components/ProfileWithMenu/ProfileWithMenu';
 import { AuthContext } from '../../context/AuthContext';
 
 type Props = {
-  user?: User;
+  leanrerId?: number;
+  username?: string;
 };
 
-const Header: React.FC<Props> = ({ user }) => (
-  <div className='h-[120px] p-[26px] border-b-[1px] border-black flex justify-between'>
+const Header: React.FC<Props> = ({ leanrerId, username }) => (
+  <div className='p-4 border-b-[1px] border-black flex justify-between'>
     <div className='flex gap-4 items-center'>
       <img
         src='/assets/logo.svg'
@@ -21,9 +21,15 @@ const Header: React.FC<Props> = ({ user }) => (
       </p>
     </div>
 
-    {user && (
+    {leanrerId && (
       <AuthContext.Consumer>
-        {({ onLogout }) => <ProfileWithMenu user={user} onLogout={onLogout} />}
+        {({ onLogout }) => (
+          <ProfileWithMenu
+            learnerId={leanrerId}
+            onLogout={onLogout}
+            username={username}
+          />
+        )}
       </AuthContext.Consumer>
     )}
   </div>

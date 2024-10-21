@@ -9,6 +9,7 @@ const Input: FC<InputProps> = ({
   className,
   type,
   onChange,
+  onBlur,
   label,
   error,
   centerAlignText,
@@ -44,6 +45,7 @@ const Input: FC<InputProps> = ({
         error={!!error}
         helperText={error}
         onChange={onValueChange}
+        onBlur={onBlur}
         type={type === 'number' ? 'text' : type}
         className={cx('!m-0', {
           'text-align-center': centerAlignText,

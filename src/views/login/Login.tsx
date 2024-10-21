@@ -1,30 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import * as yup from 'yup';
+import { fetchCSRFToken } from 'store/actions/csrfToken.action';
+import { localStorageService } from 'services/LocalStorageService';
+import { authErrorSelector } from 'store/selectors/auth.selector';
 import { authLoginAction } from '../../store/actions/auth.action';
 import FormikInput from '../../shared-resources/components/Input/FormikInput';
 import Button from '../../shared-resources/components/Button/Button';
 
 const Login: React.FC = () => {
   const dispatch = useDispatch();
+  const errorCode = useSelector(authErrorSelector);
+  const [showError, setShowError] = useState(false);
+  useEffect(() => {
+    if (
+      errorCode === 'INVALID_CREDENTIALS' ||
+      errorCode === 'LEARNER_NOT_FOUND'
+    ) {
+      setShowError(true);
+    } else {
+      setShowError(false);
+    }
+  }, [errorCode]);
+  useEffect(() => {
+    localStorageService.removeCSRFToken();
+    if (!localStorageService.getCSRFToken()) {
+      dispatch(fetchCSRFToken());
+    }
+  }, [dispatch]);
 
   const initialValues = {
-    email: '',
+    username: '',
     password: '',
   };
 
-  const handleSubmit = (values: { email: string; password: string }) => {
+  const handleSubmit = (values: { username: string; password: string }) => {
     const loginValues = {
       password: values.password,
-      email: values.email?.toLowerCase(),
+      username: values.username?.toLowerCase(),
     };
     dispatch(authLoginAction(loginValues));
   };
 
   return (
-    <div className='pt-[87px] pb-[84px] pl-[60px] pr-[109px] flex flex-col'>
-      <p className='text-4xl font-semibold text-headingTextColor pt-[23px] pb-[22px] px-[7px]'>
+    <div className='flex flex-col h-full'>
+      <p className='md:w-[65%] md:text-center text-3xl md:text-4xl font-semibold text-headingTextColor pl-8 pt-6 pb-4'>
         Welcome to Assisted Math Learning
       </p>
 
@@ -32,43 +53,68 @@ const Login: React.FC = () => {
         initialValues={initialValues}
         onSubmit={handleSubmit}
         validationSchema={yup.object().shape({
-          email: yup.string().email().required('Email is required'),
+          username: yup.string().required('Username is required'),
           password: yup.string().required('Password is required'),
         })}
+        validateOnChange // Disable validation on every keystroke
+        validateOnBlur={false} // Validate only when the field loses focus (onBlur)
       >
         {(formikProps) => {
-          const areFieldsEmpty =
-            !formikProps.values.email || !formikProps.values.password;
-          const isError = Object.keys(formikProps.errors).length > 0;
+          const areFieldsFilled =
+            !!formikProps.values.username && !!formikProps.values.password;
+
           return (
-            <Form>
-              <div className='flex gap-[85px] items-end'>
-                <div className='w-[962px] h-3/5 p-20 border-[1px] border-black mt-[61px] flex flex-col gap-[59px] items-center'>
-                  <p className='text-4xl font-semibold text-headingTextColor pt-[23px] pb-[22px] text-center'>
+            <Form className='h-full'>
+              <div className='flex flex-col md:flex-row gap-6 items-center md:items-end justify-center p-6 overflow-y-auto md:h-[80%] max-h-full'>
+                {/* Input container */}
+                <div className='w-full h-full md:w-[65%] p-8 border border-black mt-6 flex flex-col gap-6 md:gap-14 items-center justify-center md:ml-6'>
+                  {/* Title */}
+                  <p className='text-2xl md:text-3xl font-semibold text-headingTextColor py-2 text-center'>
                     LOGIN
                   </p>
-                  <div className='flex flex-col gap-[34px]'>
-                    <div className='flex gap-4 items-start'>
-                      <p className='text-2xl text-headingTextColor translate-y-1/2'>
+
+                  {/* Username & Password Inputs */}
+                  <div className='flex flex-col gap-6 md:gap-8 w-full max-w-96 px-4 md:px-0'>
+                    <div className='flex flex-col md:flex-row gap-2 md:gap-4 items-center justify-between'>
+                      <p className='text-lg md:text-2xl w-full md:w-36 text-headingTextColor'>
                         USERNAME
                       </p>
-                      <FormikInput name='email' className='w-[236px]' />
+                      <FormikInput
+                        name='username'
+                        className='w-full md:w-[236px]'
+                        onBlur={formikProps.handleBlur}
+                      />
                     </div>
-                    <div className='flex gap-4 items-start'>
-                      <p className='text-2xl text-headingTextColor  translate-y-1/2'>
+
+                    <div className='flex flex-col md:flex-row gap-2 md:gap-4 items-center justify-between'>
+                      <p className='text-lg md:text-2xl w-full md:w-36 text-headingTextColor'>
                         PASSWORD
                       </p>
                       <FormikInput
                         name='password'
-                        className='w-[236px]'
                         type='password'
+                        className='w-full md:w-[236px]'
+                        onBlur={formikProps.handleBlur}
                       />
                     </div>
                   </div>
+
+                  {/* Error Message */}
+                  {showError && (
+                    <div className='flex flex-col text-sm text-red-500 font-semibold text-center'>
+                      <span>Your username or password is incorrect.</span>
+                      <span>Please try again.</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className='pb-16'>
-                  <Button type='submit' disabled={areFieldsEmpty || isError}>
+                {/* Submit Button */}
+                <div className='w-full md:w-auto mt-8 mb-10 md:mt-0 flex justify-center'>
+                  <Button
+                    type='submit'
+                    className='w-[236px]' // Maintaining button size
+                    disabled={!areFieldsFilled}
+                  >
                     Login
                   </Button>
                 </div>

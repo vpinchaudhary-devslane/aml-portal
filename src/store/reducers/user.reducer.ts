@@ -1,27 +1,25 @@
 import produce from 'immer';
+import { User } from 'models/entities/User';
 import { Reducer } from 'redux';
 import { AuthActionType } from 'store/actions/actions.constants';
-import { addOne } from 'store/base/base.reducer';
-import { User } from '../../models/entities/User';
-import { EntityState } from '../base/EntityState';
 
-export interface UserState extends EntityState<User> {}
+export interface UserState {
+  user?: User;
+}
 
-const initialState: UserState = {
-  entities: {},
-};
+const initialState: UserState = {};
 
 export const userReducer: Reducer<UserState> = (
   // eslint-disable-next-line @typescript-eslint/default-param-last
   state: UserState = initialState,
   action
 ) =>
-  produce(state, () => {
+  produce(state, (draft: UserState) => {
     switch (action.type) {
       case AuthActionType.LOGIN_COMPLETED:
       case AuthActionType.FETCH_ME_COMPLETED: {
         const user = action.payload as User;
-        addOne(state, user);
+        draft.user = user;
         break;
       }
       default: {

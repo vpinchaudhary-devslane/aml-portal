@@ -6,6 +6,7 @@ import Axios, {
   CancelTokenSource,
   RawAxiosRequestHeaders,
 } from 'axios';
+import * as uuid from 'uuid';
 import { localStorageService } from '../LocalStorageService';
 
 interface RequestConfig extends AxiosRequestConfig {
@@ -79,6 +80,7 @@ export class BaseApiService {
 
   public post<T = any>(
     url: string,
+    id: string,
     data?: any,
     opts?: {
       headers?: AxiosRequestHeaders;
@@ -89,12 +91,21 @@ export class BaseApiService {
       };
     }
   ) {
+    const payload = {
+      id,
+      ver: '1.0',
+      ts: new Date(),
+      params: {
+        msgid: uuid.v4(),
+      },
+      request: data,
+    };
     return this.request<T>(
       {
         method: 'POST',
         url,
-        data,
-        headers: opts?.headers,
+        data: payload,
+        headers: { ...opts?.headers },
         params: opts?.params,
         requestId: opts?.extras?.requestId,
       },
@@ -171,6 +182,7 @@ export class BaseApiService {
     return {
       ...defaultHeaders,
       ...headers,
+      'CSRF-Token': `${localStorageService.getCSRFToken()}`,
     };
   };
 
@@ -184,6 +196,7 @@ export class BaseApiService {
         baseURL: BASE_URL,
         cancelToken,
         ...config,
+        withCredentials: true,
         headers: await this.generateHeaders(config.headers, useAuth ?? true),
       });
       this.removeFromRequestMap(config.requestId);
