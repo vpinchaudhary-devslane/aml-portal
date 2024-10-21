@@ -25,7 +25,7 @@
 .single-character-input {
   .Mui-focused:not(.Mui-error) {
     fieldset {
-      @apply border-purple #{!important};
+      @apply border-primary #{!important};
     }
   }
 }

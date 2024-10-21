@@ -20,6 +20,7 @@ interface QuestionProps {
     questionId: string;
     options?: string[];
     name?: { en: string };
+    question_image_url?: string;
   };
   onSubmit: (gridData: any) => void;
   onValidityChange: (validity: boolean) => void;
@@ -136,7 +137,7 @@ const Question = forwardRef(
     });
 
     const maxLength = Math.max(
-      ...Object.values(numbers).map((num) => num.length)
+      ...Object.values(numbers).map((num) => (num || '').length)
     );
 
     const formik = useFormik<FormValues>({
@@ -228,7 +229,7 @@ const Question = forwardRef(
                     value={formik.values?.topAnswer?.[index]}
                     onChange={formik.handleChange}
                     maxLength={1}
-                    className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-purple'
+                    className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                     onKeyPress={(e) => {
                       if (!/[0-9]/.test(e.key)) e.preventDefault();
                     }}
@@ -289,7 +290,7 @@ const Question = forwardRef(
                     value={formik.values?.resultAnswer?.[index]}
                     onChange={formik.handleChange}
                     maxLength={1}
-                    className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-purple'
+                    className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                     onKeyPress={(e) => {
                       if (!/[0-9]/.test(e.key)) e.preventDefault();
                     }}
@@ -341,7 +342,7 @@ const Question = forwardRef(
                       value={formik.values?.row1Answers?.[index]}
                       onChange={formik.handleChange}
                       maxLength={1}
-                      className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-purple'
+                      className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                       onKeyPress={(e) => {
                         if (!/[0-9]/.test(e.key)) e.preventDefault();
                       }}
@@ -375,7 +376,7 @@ const Question = forwardRef(
                       value={formik.values?.row2Answers?.[index]}
                       onChange={formik.handleChange}
                       maxLength={1}
-                      className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-purple'
+                      className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                       onKeyPress={(e) => {
                         if (!/[0-9]/.test(e.key)) e.preventDefault();
                       }}
@@ -397,7 +398,7 @@ const Question = forwardRef(
 
         {question.questionType === QuestionType.FIB && (
           <div className='flex flex-row items-center justify-center relative'>
-            <p className='text-4xl flex flex-row w-[200px] font-semibold text-headingTextColor ml-[60px] pt-[23px] pb-[22px] px-[7px]'>
+            <p className='text-4xl flex flex-row font-semibold text-headingTextColor ml-[60px] pt-[23px] pb-[22px] px-[7px]'>
               {Object.values(question?.numbers || {}).join(' + ')}=
             </p>
             <div className='flex flex-col space-y-2 w-[236px]'>
@@ -406,13 +407,14 @@ const Question = forwardRef(
                 name='fibAnswer'
                 value={formik.values.fibAnswer}
                 onChange={formik.handleChange}
+                maxLength={9}
                 onKeyPress={(e) => {
                   // Prevent non-numeric key presses
                   if (!/[0-9]/.test(e.key)) {
                     e.preventDefault();
                   }
                 }}
-                className='border-2 border-gray-900 rounded-[10px] p-2 w-full h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-purple'
+                className='border-2 border-gray-900 rounded-[10px] p-2 w-full h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
               />
               {formik.touched.fibAnswer && formik.errors.fibAnswer && (
                 <div className='text-red-500 text-xs absolute -bottom-2'>
@@ -425,7 +427,11 @@ const Question = forwardRef(
 
         {question.questionType === QuestionType.MCQ && !!question.options && (
           <div className='flex flex-col space-y-2 justify-center items-center'>
-            <span className='mb-6'>{question?.name?.en}</span>
+            {question?.question_image_url ? (
+              <img src={question.question_image_url} alt='logo' />
+            ) : (
+              <span className='mb-6'>{question?.name?.en}</span>
+            )}
             <ToggleButtonGroup
               selectedValue={formik.values.mcqAnswer}
               setSelectedValue={(val) => formik.setFieldValue('mcqAnswer', val)}
