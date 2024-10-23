@@ -20,16 +20,24 @@ function* LearnerJourneyFetchSaga({
       learner_id: payload,
     });
     yield put(fetchLearnerJourneyCompleted(response.result?.data));
-    if (
-      (response.responseCode === 'OK' &&
-        response?.result?.data?.question_set_id &&
-        response?.result?.data?.status === LearnerJourneyStatus.IN_PROGRESS) ||
-      !!localStorageService.getLearnerResponseData(payload)
-    ) {
+    const questionSetId = response?.result?.data?.question_set_id;
+    const isInProgress =
+      response?.result?.data?.status === LearnerJourneyStatus.IN_PROGRESS;
+    const hasLearnerData =
+      !!localStorageService.getLearnerResponseData(payload);
+
+    if (response.responseCode === 'OK' && questionSetId && isInProgress) {
       yield put(navigateTo('/continue-journey'));
-      yield put(questionSetFetchAction(response.result.data.question_set_id));
+      yield put(questionSetFetchAction(questionSetId));
+    } else if (hasLearnerData) {
+      yield put(navigateTo('/continue-journey'));
+      if (questionSetId) {
+        yield put(questionSetFetchAction(questionSetId));
+      } else {
+        yield put(fetchLogicEngineEvaluation(payload));
+      }
     } else {
-      // yield put(navigateTo('/welcome'));
+      yield put(navigateTo('/welcome'));
       yield put(fetchLogicEngineEvaluation(payload));
     }
   } catch (e: any) {

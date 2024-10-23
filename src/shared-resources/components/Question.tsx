@@ -41,25 +41,36 @@ interface FormValues {
 const Question = forwardRef(
   ({ question, onSubmit, onValidityChange }: QuestionProps, ref) => {
     const { answers, numbers } = question;
-
     const validationSchema = Yup.object({
       topAnswer: Yup.array()
         .of(
-          Yup.string()
-            .required('Required')
-            .matches(/^\d$/, 'Must be a single digit')
+          Yup.string().test(
+            'is-topAnswer-valid',
+            'Must be a single digit or #',
+            (value: any) => {
+              if (!answers?.isPrefil) {
+                return true; // Skip validation if isPrefill is false
+              }
+              return /^\d$/.test(value) || value === '#'; // Valid when it's a digit or #
+            }
+          )
         )
         .test(
-          'is-topAnswer-required',
-          'Top answer is required',
-          function (value) {
-            const { questionType } = this.parent;
-            return (
-              questionType !== QuestionType.GRID_1 ||
-              (value && value.length > 0)
-            );
+          'is-no-empty-strings',
+          'Top answer cannot be empty',
+          (value: any) => {
+            if (!answers?.isPrefil) {
+              return true; // Skip validation if isPrefill is false
+            }
+            return value.every((item: string) => item !== ''); // Check that no empty strings are present
           }
-        ),
+        )
+        .test('is-topAnswer-required', 'Top answer is required', (value) => {
+          if (!answers?.isPrefil) {
+            return true; // Skip validation if isPrefill is false
+          }
+          return value && value.length > 0; // Ensure the array has at least one valid entry
+        }),
 
       resultAnswer: Yup.array()
         .of(
@@ -203,69 +214,71 @@ const Question = forwardRef(
       >
         {question.questionType === QuestionType.GRID_1 && (
           <>
+            {/* Top labels */}
             <div className='flex justify-center self-end'>
               {Array.from({ length: question.answers?.answerTop?.length }).map(
                 (_, index) => (
                   <div
                     key={index}
-                    className='w-[46px] mr-2 p-2 text-[#A5A5A5] text-center  flex items-center justify-center font-bold text-[20px]'
+                    className='w-[46px] mr-2 p-2 text-[#A5A5A5] text-center flex items-center justify-center font-bold text-[20px]'
                   >
-                    {['U', 'T', 'H', 'Th', 'TTh', 'TTTh'][
+                    {['U', 'T', 'H', 'Th', 'TTh', 'L'][
                       question.answers?.answerTop?.length - index
                     ] || ''}
                   </div>
                 )
               )}
-              <div className='w-[46px] p-2 text-[#A5A5A5] text-center  flex items-center justify-center font-bold text-[20px]'>
+              <div className='w-[46px] p-2 text-[#A5A5A5] text-center flex items-center justify-center font-bold text-[20px]'>
                 U
               </div>
             </div>
-            <div className='flex justify-end space-x-2 self-end'>
-              {formik.values?.topAnswer?.map((value, index) => (
-                <div key={`top-${index}`}>
-                  <input
-                    type='text'
-                    name={`topAnswer.${index}`}
-                    value={formik.values?.topAnswer?.[index]}
-                    onChange={formik.handleChange}
-                    maxLength={1}
-                    className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
-                    onKeyPress={(e) => {
-                      if (!/[0-9]/.test(e.key)) e.preventDefault();
-                    }}
-                  />
-                  {/* Using Array.isArray to check if formik.touched and formik.errors are arrays */}
-                  {Array.isArray(formik.touched.topAnswer) &&
-                    Array.isArray(formik.errors.topAnswer) &&
-                    formik.touched.topAnswer[index] &&
-                    formik.errors.topAnswer[index] && (
-                      <div className='text-red-500 text-xs'>
-                        {formik.errors.topAnswer[index]}
-                      </div>
+
+            {/* Top answer inputs */}
+            {answers?.isPrefil && (
+              <div className='flex justify-end space-x-2 self-end'>
+                {formik.values?.topAnswer?.map((char, index) => (
+                  <div key={`top-${index}`}>
+                    {char === '#' ? (
+                      <div className='w-[46px] h-[61px]' /> // Render blank space
+                    ) : (
+                      <input
+                        type='text'
+                        name={`topAnswer.${index}`}
+                        value={char === 'B' ? '' : char} // If 'B', keep input empty
+                        onChange={formik.handleChange}
+                        maxLength={1}
+                        className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) e.preventDefault(); // Only allow numbers
+                        }}
+                      />
                     )}
-                </div>
-              ))}
-              <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]'>
-                {' '}
+
+                    {Array.isArray(formik.touched.topAnswer) &&
+                      Array.isArray(formik.errors.topAnswer) &&
+                      formik.touched.topAnswer[index] &&
+                      formik.errors.topAnswer[index] && (
+                        <div className='text-red-500 text-xs'>
+                          {formik.errors.topAnswer[index]}
+                        </div>
+                      )}
+                  </div>
+                ))}
+                <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]' />
               </div>
-            </div>
+            )}
+            {/* Numbers */}
             <div className='flex flex-col space-y-2 self-end'>
               {Object.keys(numbers).map((key, idx) => (
                 <div key={key} className='flex justify-end space-x-2'>
-                  {/* Adding leading spaces for all but the last number */}
                   {idx < Object.keys(numbers).length - 1 && (
-                    <div className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px] leading-[42.3px]'>
-                      {' '}
-                      {/* Leading space */}
-                    </div>
+                    <div className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px] leading-[42.3px]' /> // Leading space
                   )}
-                  {/* Added the plus sign before the last number */}
                   {idx === Object.keys(numbers).length - 1 && (
                     <div className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px]'>
                       +
                     </div>
                   )}
-                  {/* Rendering the number digits */}
                   {numbers[key].split('').map((digit, index) => (
                     <div
                       key={index}
@@ -277,11 +290,13 @@ const Question = forwardRef(
                 </div>
               ))}
             </div>
+
+            {/* Separator */}
             <hr className='w-full text-black border border-black' />
+
+            {/* Result answer inputs */}
             <div className='flex space-x-2'>
-              <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]'>
-                {' '}
-              </div>
+              <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]' />
               {formik.values?.resultAnswer?.map((value, index) => (
                 <div key={`result-${index}`}>
                   <input
@@ -295,7 +310,6 @@ const Question = forwardRef(
                       if (!/[0-9]/.test(e.key)) e.preventDefault();
                     }}
                   />
-                  {/* Checking for touched and errors for resultAnswer */}
                   {Array.isArray(formik.touched.resultAnswer) &&
                     Array.isArray(formik.errors.resultAnswer) &&
                     formik.touched.resultAnswer[index] &&
@@ -309,6 +323,7 @@ const Question = forwardRef(
             </div>
           </>
         )}
+
         {question.questionType === QuestionType.GRID_2 && (
           <>
             <div className='flex justify-center'>

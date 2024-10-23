@@ -37,7 +37,7 @@ export const transformQuestions = (apiQuestions: any): any =>
             result: question_body.answers.result,
           }),
           ...(question_body.answers.isPrefil !== undefined && {
-            isShowCarry: question_body.answers.isPrefil,
+            isPrefil: question_body.answers.isPrefil,
           }),
           ...(question_body.answers.answerTop !== undefined && {
             answerTop: question_body.answers.answerTop,
