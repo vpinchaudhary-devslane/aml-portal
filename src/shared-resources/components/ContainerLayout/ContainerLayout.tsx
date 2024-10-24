@@ -9,6 +9,7 @@ interface ContainerLayoutProps {
   buttonText: string;
   onButtonClick: () => void; // Handler for button click
   buttonDisabled?: boolean;
+  toolTipMessage?: string;
 }
 
 const ContainerLayout: React.FC<ContainerLayoutProps> = ({
@@ -17,6 +18,7 @@ const ContainerLayout: React.FC<ContainerLayoutProps> = ({
   buttonText,
   onButtonClick,
   buttonDisabled,
+  toolTipMessage,
 }) => (
   <div className='flex flex-col'>
     <QuestionHeader HeaderText={headerText} />
@@ -26,7 +28,12 @@ const ContainerLayout: React.FC<ContainerLayoutProps> = ({
       </div>
 
       <div className='md:pb-16'>
-        <Button type='button' onClick={onButtonClick} disabled={buttonDisabled}>
+        <Button
+          type='button'
+          onClick={onButtonClick}
+          disabled={buttonDisabled}
+          tooltipMessage={toolTipMessage}
+        >
           {buttonText}
         </Button>
       </div>
