@@ -30,34 +30,40 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
     // Declare a variable to hold the interval ID
     let intervalId: any | null = null;
 
+    // Function to sync learner response data
+    const syncLearnerResponseData = () => {
+      const data =
+        localStorageService.getLearnerResponseData(String(learnerId)) || [];
+
+      if (data.length > 0) {
+        dispatch(
+          syncLearnerResponse({
+            learner_id: learnerId,
+            questions_data: data,
+          })
+        );
+      }
+    };
+
     if (learnerId) {
-      // Start syncing if the user is authenticated
-      const syncLearnerResponseData = () => {
-        const data =
-          localStorageService.getLearnerResponseData(String(learnerId)) || [];
+      intervalId = setTimeout(() => {
+        const repeatedSyncInterval = setInterval(
+          syncLearnerResponseData,
+          120000
+        );
+        syncLearnerResponseData();
 
-        if (data.length > 0) {
-          dispatch(
-            syncLearnerResponse({
-              learner_id: learnerId,
-              questions_data: data,
-            })
-          );
-        }
-      };
-
-      // Sync every 2 minutes (120000ms)
-      intervalId = setInterval(syncLearnerResponseData, 120000);
-      // Initial sync on component mount
-      syncLearnerResponseData();
+        intervalId = repeatedSyncInterval;
+      }, 120000);
     }
-    // Cleanup function to clear the interval when the user logs out
+
     return () => {
       if (intervalId) {
+        clearTimeout(intervalId);
         clearInterval(intervalId);
       }
     };
-  }, [learnerId]);
+  }, [learnerId, dispatch]);
 
   return <>{children}</>; // Render the children
 };

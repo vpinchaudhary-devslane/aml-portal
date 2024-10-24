@@ -43,16 +43,13 @@ const Questions: React.FC = () => {
           ...new Set([...apiAnsweredIds, ...localStorageAnsweredIds]),
         ];
 
-        // Check if all questions are answered
         const allAnswered = transformedQuestions.every((question: any) =>
           combinedAnsweredIds.includes(question.questionId)
         );
 
         if (allAnswered) {
-          // If all questions are answered, set completed state
           setIsCompleted(true);
         } else {
-          // Otherwise, set the first unanswered question
           const firstUnansweredIndex = transformedQuestions.findIndex(
             (question: any) =>
               !combinedAnsweredIds.includes(question.questionId)
@@ -73,73 +70,73 @@ const Questions: React.FC = () => {
       if (questionRef.current) {
         questionRef.current.submitForm();
       }
-      // If this is the last question, dispatch sync action
-      if (!isCompleted) {
-        setIsSyncing(true);
-        const learnerResponseData = localStorageService.getLearnerResponseData(
-          String(learnerId)
-        );
-        dispatch(
-          syncLearnerResponse({
-            learner_id: learnerId,
-            questions_data: learnerResponseData,
-          })
-        );
-        setIsSyncing(false);
-        setIsCompleted(true); // Mark as completed once sync is done
-      }
-    } else {
-      // For non-last questions, submit the form as usual
-      // eslint-disable-next-line no-lonely-if
-      if (questionRef.current) {
-        questionRef.current.submitForm();
-      }
+    } else if (questionRef.current) {
+      questionRef.current.submitForm();
     }
   };
 
   const handleQuestionSubmit = (gridData: any) => {
     const currentTime = new Date().toISOString();
-    setSubmittedAnswers((prev) => {
-      const newAnswer = {
-        topAnswer: gridData.topAnswer,
-        resultAnswer: gridData.resultAnswer,
-        row1Answers: gridData?.row1Answers,
-        row2Answers: gridData?.row2Answers,
-        fibAnswer: gridData?.fibAnswer,
-        mcqAnswer: gridData?.mcqAnswer,
-        questionId: gridData.questionId,
-        start_time: '',
-        end_time: '',
-      };
-      if (currentQuestionIndex === 0) newAnswer.start_time = currentTime;
-      if (currentQuestionIndex === questions.length - 1)
-        newAnswer.end_time = currentTime;
-      return [...prev, newAnswer];
-    });
-    setCurrentQuestionIndex((prev) => prev + 1);
-  };
+    const newAnswer = {
+      topAnswer: gridData.topAnswer,
+      resultAnswer: gridData.resultAnswer,
+      row1Answers: gridData?.row1Answers,
+      row2Answers: gridData?.row2Answers,
+      fibAnswer: gridData?.fibAnswer,
+      mcqAnswer: gridData?.mcqAnswer,
+      questionId: gridData.questionId,
+      start_time: currentQuestionIndex === 0 ? currentTime : '',
+      end_time:
+        currentQuestionIndex === questions.length - 1 ? currentTime : '',
+    };
 
-  useEffect(() => {
-    const filteredAnswers = submittedAnswers.map(
-      ({ questionId, start_time, end_time, ...answers }) => ({
-        questionId,
-        start_time,
-        end_time,
-        answers: Object.fromEntries(
-          Object.entries(answers).filter(([_, value]) => value !== undefined)
-        ),
-      })
-    );
-    if (questionSet) {
-      const payload = convertResponseToLearnerResponse(
-        filteredAnswers,
-        questionSet?.identifier
+    setSubmittedAnswers((prev) => {
+      const updatedAnswers = [...prev, newAnswer];
+
+      const filteredAnswers = updatedAnswers.map(
+        ({ questionId, start_time, end_time, ...answers }) => ({
+          questionId,
+          start_time,
+          end_time,
+          answers: Object.fromEntries(
+            Object.entries(answers).filter(([_, value]) => value !== undefined)
+          ),
+        })
       );
-      if (!!learnerId && payload.length) {
-        localStorageService.saveLearnerResponseData(String(learnerId), payload);
+
+      if (questionSet) {
+        const payload = convertResponseToLearnerResponse(
+          filteredAnswers,
+          questionSet?.identifier
+        );
+        if (!!learnerId && payload.length) {
+          localStorageService.saveLearnerResponseData(
+            String(learnerId),
+            payload
+          );
+        }
       }
+
+      return updatedAnswers;
+    });
+
+    setCurrentQuestionIndex((prev) => prev + 1);
+
+    if (currentQuestionIndex === questions.length - 1) {
+      setIsSyncing(true);
+      const learnerResponseData = localStorageService.getLearnerResponseData(
+        String(learnerId)
+      );
+      dispatch(
+        syncLearnerResponse({
+          learner_id: learnerId,
+          questions_data: learnerResponseData,
+        })
+      );
+      setIsSyncing(false); // to be moved in store
+      setIsCompleted(true); // to be moved in store
     }
-  }, [submittedAnswers]);
+  };
 
   const currentQuestion = questions[currentQuestionIndex];
 

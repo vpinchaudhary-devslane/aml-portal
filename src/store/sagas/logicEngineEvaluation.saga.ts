@@ -9,6 +9,7 @@ import {
   fetchLogicEngineEvaluationError,
 } from 'store/actions/logicEngineEvaluation.action';
 import { logicEngineEvalutionService } from 'services/api-services/logicEngineEvaluationService';
+import { localStorageService } from 'services/LocalStorageService';
 
 function* LogicEngineEvaluationFetchSaga({
   payload,
@@ -23,7 +24,14 @@ function* LogicEngineEvaluationFetchSaga({
     // not needed
     // yield put(fetchLogicEngineEvaluationCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
-      yield put(navigateTo('/welcome'));
+      const hasLocalData = localStorageService.getLearnerResponseData(
+        String(payload)
+      );
+      if (hasLocalData) {
+        yield put(navigateTo('/continue-journey'));
+      } else {
+        yield put(navigateTo('/welcome'));
+      }
       yield put(questionSetFetchAction(response.result.data.question_set_id));
     }
   } catch (e: any) {
