@@ -169,6 +169,7 @@ const Questions: React.FC = () => {
       buttonText={isCompleted ? 'Next Set' : isSyncing ? 'Syncing...' : 'Next'}
       onButtonClick={handleNextClick}
       buttonDisabled={!isCompleted && (!isFormValid || isSyncing)} // Disable during sync or if the form isn't valid
+      toolTipMessage='Fill in all the empty blanks to continue'
     />
   );
 };

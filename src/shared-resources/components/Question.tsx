@@ -251,6 +251,11 @@ const Question = forwardRef(
                         onKeyPress={(e) => {
                           if (!/[0-9]/.test(e.key)) e.preventDefault(); // Only allow numbers
                         }}
+                        disabled={
+                          (answers.answerTop[index] || '') !== '' &&
+                          (answers.answerTop[index] || '') !== 'B' &&
+                          char === (answers.answerTop[index] || '')
+                        } // Disable if it matches the initial value
                       />
                     )}
 
@@ -271,14 +276,6 @@ const Question = forwardRef(
             <div className='flex flex-col space-y-2 self-end'>
               {Object.keys(numbers).map((key, idx) => (
                 <div key={key} className='flex justify-end space-x-2'>
-                  {idx < Object.keys(numbers).length - 1 && (
-                    <div className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px] leading-[42.3px]' /> // Leading space
-                  )}
-                  {idx === Object.keys(numbers).length - 1 && (
-                    <div className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px]'>
-                      +
-                    </div>
-                  )}
                   {numbers[key].split('').map((digit, index) => (
                     <div
                       key={index}
@@ -292,8 +289,10 @@ const Question = forwardRef(
             </div>
 
             {/* Separator */}
-            <hr className='w-full text-black border border-black' />
-
+            <div className='w-full relative'>
+              <span className='absolute bottom-4 left-4'>+</span>
+              <hr className='w-full text-black border border-black' />
+            </div>
             {/* Result answer inputs */}
             <div className='flex space-x-2'>
               <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]' />
@@ -309,6 +308,11 @@ const Question = forwardRef(
                     onKeyPress={(e) => {
                       if (!/[0-9]/.test(e.key)) e.preventDefault();
                     }}
+                    disabled={
+                      (answers.answerResult[index] || '') !== '' &&
+                      (answers.answerResult[index] || '') !== 'B' &&
+                      value === (answers.answerResult[index] || '')
+                    } // Disable if it matches the initial value
                   />
                   {Array.isArray(formik.touched.resultAnswer) &&
                     Array.isArray(formik.errors.resultAnswer) &&
