@@ -33,6 +33,8 @@ function* LogicEngineEvaluationFetchSaga({
         yield put(navigateTo('/welcome'));
       }
       yield put(questionSetFetchAction(response.result.data.question_set_id));
+    } else {
+      yield put(navigateTo('/completed'));
     }
   } catch (e: any) {
     yield put(
