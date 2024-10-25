@@ -6,6 +6,7 @@ import { questionSetReducer } from './questionSet.reducer';
 import { learnerJourneyReducer } from './learnerJourney.reducer';
 import { navigationReducer } from './NavigationReducer';
 import { csrfTokenReducer } from './csrfToken.reducer';
+import { contentReducer } from './content.reducer';
 
 const appReducer = combineReducers({
   auth: authReducer,
@@ -14,6 +15,7 @@ const appReducer = combineReducers({
   learnerJourney: learnerJourneyReducer,
   navigationReducer,
   csrfTokenReducer,
+  contentReducer,
 });
 
 export const rootReducer = (state: any, action: any) => {

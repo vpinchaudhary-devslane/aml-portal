@@ -2,7 +2,6 @@ import produce from 'immer';
 import { Reducer } from 'redux';
 import { QuestionSetActionType } from 'store/actions/actions.constants';
 import { QuestionSet } from 'models/entities/QuestionSet';
-import { EntityState } from '../base/EntityState';
 
 export interface QuestionSetState {
   loading?: boolean;

@@ -48,3 +48,9 @@ export enum SyncLearnerResponseActionType {
   SYNC_LEARNER_RESPONSE_COMPLETED = 'sync/learner/response/completed',
   SYNC_LEARNER_RESPONSE_ERROR = 'sync/learner/response/error',
 }
+
+export enum FetchContentActionType {
+  FETCH_CONTENT = 'fetch/content',
+  FETCH_CONTENT_COMPLETED = 'fetch/content/completed',
+  FETCH_CONTENT_ERROR = 'fetch/content/error',
+}
