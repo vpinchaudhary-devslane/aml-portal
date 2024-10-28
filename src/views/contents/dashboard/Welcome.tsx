@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
 import { loggedInUserSelector } from 'store/selectors/auth.selector';

@@ -91,7 +91,7 @@ const Questions: React.FC = () => {
     };
 
     setSubmittedAnswers((prev) => {
-      const updatedAnswers = [...prev, newAnswer];
+      const updatedAnswers = [newAnswer];
 
       const filteredAnswers = updatedAnswers.map(
         ({ questionId, start_time, end_time, ...answers }) => ({

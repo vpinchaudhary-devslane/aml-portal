@@ -5,4 +5,5 @@ export enum RouteKey {
   CONTINUE_JOURNEY = 'continue-journey',
   WELCOME = 'welcome',
   QUESTIONS = 'questions',
+  COMPLETED = 'completed',
 }

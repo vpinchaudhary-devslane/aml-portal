@@ -17,4 +17,7 @@ export const webRoutes: any = {
   welcome: {
     root: () => '/welcome',
   },
+  completed: {
+    root: () => '/completed',
+  },
 };
