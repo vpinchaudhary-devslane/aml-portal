@@ -9,7 +9,9 @@ class QuestionSetService {
   async fetchQuestionSet(data: {
     question_set_id: string;
   }): Promise<QuestionSet> {
-    return baseApiService.get(`question-set/read/${data.question_set_id}`);
+    return baseApiService.get(
+      `/api/v1/question-set/read/${data.question_set_id}`
+    );
   }
 }
 

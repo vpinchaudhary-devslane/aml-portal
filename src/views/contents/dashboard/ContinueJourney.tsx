@@ -30,6 +30,7 @@ const ContinueJourney: React.FC = () => {
       buttonText='RESUME'
       onButtonClick={handleResumeClick}
       buttonDisabled={!questions?.length}
+      toolTipMessage='No questions available'
     />
   );
 };

@@ -31,6 +31,7 @@ const Welcome: React.FC = () => {
       buttonText='Start'
       onButtonClick={handleStartClick}
       buttonDisabled={!questions?.length}
+      toolTipMessage='No questions available'
     />
   );
 };

@@ -9,7 +9,7 @@ class SyncLearnerResponseService {
     data: any
   ): Promise<{ data: { question_set_id: string } }> {
     return baseApiService.post(
-      `/learner/proficiency-data/sync`,
+      `/api/v1/learner/proficiency-data/sync`,
       'api.learner.proficiency-data.sync',
       data,
       {

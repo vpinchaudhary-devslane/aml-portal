@@ -9,7 +9,9 @@ class LearnerJourneyService {
   async fetchLearnerjourney(data: {
     learner_id: string;
   }): Promise<LearnerJourney> {
-    return baseApiService.get(`/learner/journey/read/${data.learner_id}`);
+    return baseApiService.get(
+      `/api/v1/learner/journey/read/${data.learner_id}`
+    );
   }
 }
 
