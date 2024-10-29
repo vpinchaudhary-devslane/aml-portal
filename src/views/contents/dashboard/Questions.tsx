@@ -13,6 +13,8 @@ import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
 import { learnerIdSelector } from 'store/selectors/auth.selector';
 import { learnerJourneySelector } from 'store/selectors/learnerJourney.selector';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
 
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -26,6 +28,7 @@ const Questions: React.FC = () => {
   const learnerJourney = useSelector(learnerJourneySelector);
   const dispatch = useDispatch();
   const questionRef = useRef<{ submitForm: () => void } | null>(null);
+  const { width, height } = useWindowSize();
 
   useEffect(() => {
     if (questionSet?.questions) {
@@ -141,36 +144,41 @@ const Questions: React.FC = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <ContainerLayout
-      headerText={
-        isCompleted
-          ? 'Congratulations!'
-          : questions[currentQuestionIndex]?.description?.en || ''
-      }
-      content={
-        <div className='text-4xl font-semibold text-headingTextColor'>
-          {isCompleted ? (
-            <div>
-              <p>Congratulations! You've completed this question set.</p>
-              <p>Click "Next" to move on to the next question set.</p>
-            </div>
-          ) : questions.length && currentQuestion ? (
-            <Question
-              ref={questionRef}
-              question={questions[currentQuestionIndex]}
-              onSubmit={(gridData) => handleQuestionSubmit(gridData)}
-              onValidityChange={(value: boolean) => setIsFormValid(value)}
-            />
-          ) : (
-            ''
-          )}
-        </div>
-      }
-      buttonText={isCompleted ? 'Next Set' : isSyncing ? 'Syncing...' : 'Next'}
-      onButtonClick={handleNextClick}
-      buttonDisabled={!isCompleted && (!isFormValid || isSyncing)} // Disable during sync or if the form isn't valid
-      toolTipMessage='Fill in all the empty blanks to continue'
-    />
+    <>
+      {isCompleted && <Confetti width={width} height={height} />}
+      <ContainerLayout
+        headerText={
+          isCompleted
+            ? 'Congratulations!'
+            : questions[currentQuestionIndex]?.description?.en || ''
+        }
+        content={
+          <div className='text-4xl font-semibold text-headingTextColor'>
+            {isCompleted ? (
+              <div>
+                <p>Congratulations! You've completed this question set.</p>
+                <p>Click "Next" to move on to the next question set.</p>
+              </div>
+            ) : questions.length && currentQuestion ? (
+              <Question
+                ref={questionRef}
+                question={questions[currentQuestionIndex]}
+                onSubmit={(gridData) => handleQuestionSubmit(gridData)}
+                onValidityChange={(value: boolean) => setIsFormValid(value)}
+              />
+            ) : (
+              ''
+            )}
+          </div>
+        }
+        buttonText={
+          isCompleted ? 'Next Set' : isSyncing ? 'Syncing...' : 'Next'
+        }
+        onButtonClick={handleNextClick}
+        buttonDisabled={!isCompleted && (!isFormValid || isSyncing)} // Disable during sync or if the form isn't valid
+        toolTipMessage='Fill in all the empty blanks to continue'
+      />
+    </>
   );
 };
 
