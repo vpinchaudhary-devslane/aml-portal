@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import QuestionHeader from 'shared-resources/components/QuestionHeader/QuestionHeader';
 import { loggedInUserSelector } from 'store/selectors/auth.selector';
 import Confetti from 'react-confetti';
-import { useWindowSize } from 'react-use';
+import useWindowSize from 'hooks/useWindowSize';
 
 const Completed: React.FC = () => {
   const userSelector = useSelector(loggedInUserSelector);
