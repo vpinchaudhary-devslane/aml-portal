@@ -14,7 +14,7 @@ import { learnerIdSelector } from 'store/selectors/auth.selector';
 import { learnerJourneySelector } from 'store/selectors/learnerJourney.selector';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 import Confetti from 'react-confetti';
-import { useWindowSize } from 'react-use';
+import useWindowSize from 'hooks/useWindowSize';
 
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
