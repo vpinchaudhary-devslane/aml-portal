@@ -54,3 +54,9 @@ export enum FetchContentActionType {
   FETCH_CONTENT_COMPLETED = 'fetch/content/completed',
   FETCH_CONTENT_ERROR = 'fetch/content/error',
 }
+
+export enum FetchContentMediaActionType {
+  FETCH_MEDIA = 'fetch/media',
+  FETCH_MEDIA_COMPLETED = 'fetch/media/completed',
+  FETCH_MEDIA_ERROR = 'fetch/media/error',
+}

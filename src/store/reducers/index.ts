@@ -7,6 +7,7 @@ import { learnerJourneyReducer } from './learnerJourney.reducer';
 import { navigationReducer } from './NavigationReducer';
 import { csrfTokenReducer } from './csrfToken.reducer';
 import { contentReducer } from './content.reducer';
+import { mediaReducer } from './media.reducer';
 
 const appReducer = combineReducers({
   auth: authReducer,
@@ -16,6 +17,7 @@ const appReducer = combineReducers({
   navigationReducer,
   csrfTokenReducer,
   contentReducer,
+  mediaReducer,
 });
 
 export const rootReducer = (state: any, action: any) => {

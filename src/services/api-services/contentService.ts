@@ -9,7 +9,7 @@ class ContentService {
   async fetchContentbyContentId(data: {
     content_id: string;
   }): Promise<QuestionSet> {
-    return baseApiService.get(`content/read/${data.content_id}`);
+    return baseApiService.get(`api/v1/content/read/${data.content_id}`);
   }
 }
 
