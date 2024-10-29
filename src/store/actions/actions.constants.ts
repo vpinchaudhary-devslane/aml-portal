@@ -60,3 +60,9 @@ export enum FetchContentMediaActionType {
   FETCH_MEDIA_COMPLETED = 'fetch/media/completed',
   FETCH_MEDIA_ERROR = 'fetch/media/error',
 }
+
+export enum FetchQuestionImageActionType {
+  FETCH_QUESTION_IMAGE = 'fetch/question/image',
+  FETCH_QUESTION_IMAGE_COMPLETED = 'fetch/question/image/completed',
+  FETCH_QUESTION_IMAGE_ERROR = 'fetch/question/image/error',
+}

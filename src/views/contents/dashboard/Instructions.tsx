@@ -7,7 +7,10 @@ import ContainerLayout from 'shared-resources/components/ContainerLayout/Contain
 import { ArrowBack, ArrowForward } from '@mui/icons-material'; // Material UI icons for back and next arrows
 import QuestionHeader from 'shared-resources/components/QuestionHeader/QuestionHeader';
 import Button from 'shared-resources/components/Button/Button';
-import { mediaSelector } from 'store/selectors/media.selector';
+import {
+  isMediaLoadingSelector,
+  mediaSelector,
+} from 'store/selectors/media.selector';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 
 const Instructions: React.FC = () => {
@@ -17,12 +20,10 @@ const Instructions: React.FC = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const questionSet = useSelector(questionsSetSelector);
-
+  const mediaLoading = useSelector(isMediaLoadingSelector);
+  const [isMediaLoading, setisMediaLoading] = useState<boolean>(false);
   const contentMediaSelector = useSelector(mediaSelector);
   const [mediaURLs, setMediaURLs] = useState<string[]>([]);
-  const videoUrls = [
-    'https://aml-dev-otsv83nane.s3.us-east-1.amazonaws.com/media/content/c_add_042.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAU6GDWUK574PGOKPW%2F20241029%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20241029T121014Z&X-Amz-Expires=600000&X-Amz-Signature=c78e040d25b9391ad11ddce2849f634bc13a3199b1656833487496b009c7dc4a&X-Amz-SignedHeaders=host&x-id=GetObject',
-  ];
   useEffect(() => {
     const urls = Object.values(contentMediaSelector).flatMap((item) =>
       item.media.signedUrls.map((urlObj: any) => urlObj.url)
@@ -31,7 +32,7 @@ const Instructions: React.FC = () => {
   }, [contentMediaSelector]);
 
   const handleNextClick = () => {
-    if (currentVideoIndex < videoUrls.length - 1) {
+    if (currentVideoIndex < mediaURLs.length - 1) {
       setCurrentVideoIndex((prevIndex) => prevIndex + 1);
     }
   };
@@ -42,13 +43,13 @@ const Instructions: React.FC = () => {
     }
   };
 
-  const togglePlayPause = () => {
-    setIsPlaying((prevPlaying) => !prevPlaying);
-  };
-
   const handleStartClick = () => {
     navigate('/questions');
   };
+
+  useEffect(() => {
+    setisMediaLoading(mediaLoading);
+  }, [mediaLoading]);
 
   return (
     <>
@@ -68,7 +69,7 @@ const Instructions: React.FC = () => {
 
                 <div className='flex-1 h-full'>
                   <ReactPlayer
-                    url={videoUrls[currentVideoIndex]}
+                    url={mediaURLs[currentVideoIndex]}
                     playing={isPlaying}
                     controls
                     width='100%'
@@ -80,7 +81,7 @@ const Instructions: React.FC = () => {
                 <button
                   className='text-gray-600 hover:text-gray-800 disabled:opacity-50'
                   onClick={handleNextClick}
-                  disabled={currentVideoIndex === videoUrls.length - 1}
+                  disabled={currentVideoIndex === mediaURLs.length - 1}
                 >
                   <ArrowForward fontSize='large' />
                 </button>

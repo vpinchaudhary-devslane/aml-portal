@@ -58,7 +58,9 @@ export const transformQuestions = (apiQuestions: any): any =>
     // Construct options only for MCQ type questions
     const options =
       question_type === QuestionType.MCQ ? question_body?.options : undefined;
-
+    const questionImage = question_body?.question_image
+      ? { ...question_body.question_image }
+      : undefined;
     return {
       questionId: identifier, // Assigning identifier as questionId
       questionType: question_type, // Adding questionType from the API
@@ -67,6 +69,7 @@ export const transformQuestions = (apiQuestions: any): any =>
       ...(answers && { answers }), // Include only if answers exist
       ...(numbers && { numbers }), // Include only if numbers exist
       ...(options && { options }), // Include only if it's an MCQ question
+      ...(questionImage && { questionImage }),
     };
   });
 
@@ -111,4 +114,23 @@ export function convertResponseToLearnerResponse(
       learner_response,
     };
   });
+}
+
+export function convertToCamelCase(input: {
+  src: string;
+  file_name: string;
+  mediaType: string;
+  mime_type: string;
+}): {
+  fileName: string;
+  src: string;
+  mimeType: string;
+  mediaType: string;
+} {
+  return {
+    fileName: input.file_name,
+    src: `${input.src}/${Date.now()}`,
+    mimeType: input.mime_type,
+    mediaType: input.mediaType,
+  };
 }

@@ -1,16 +1,23 @@
 import produce from 'immer';
 import { Reducer } from 'redux';
-import { FetchContentMediaActionType } from 'store/actions/actions.constants';
+import {
+  FetchContentMediaActionType,
+  FetchQuestionImageActionType,
+} from 'store/actions/actions.constants';
 
 export interface MediaState {
   loading?: boolean;
   error?: string;
   media: { [key: string]: any };
+  currentImageUrl: string;
+  loadingImage: boolean;
 }
 
 const initialState: MediaState = {
   loading: false,
   media: {},
+  currentImageUrl: '',
+  loadingImage: false,
 };
 
 export const mediaReducer: Reducer<MediaState> = (
@@ -33,6 +40,24 @@ export const mediaReducer: Reducer<MediaState> = (
       case FetchContentMediaActionType.FETCH_MEDIA_ERROR: {
         const error = action.payload as string;
         draft.loading = false;
+        draft.error = error;
+        break;
+      }
+      case FetchQuestionImageActionType.FETCH_QUESTION_IMAGE: {
+        draft.loadingImage = true;
+        break;
+      }
+      case FetchQuestionImageActionType.FETCH_QUESTION_IMAGE_COMPLETED: {
+        const imageURL: any = action.payload as {
+          currentImageURL: string;
+        };
+        draft.currentImageUrl = imageURL?.currentImageURL;
+        draft.loadingImage = false;
+        break;
+      }
+      case FetchQuestionImageActionType.FETCH_QUESTION_IMAGE_ERROR: {
+        const error = action.payload as string;
+        draft.loadingImage = false;
         draft.error = error;
         break;
       }

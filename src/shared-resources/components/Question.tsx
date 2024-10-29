@@ -1,9 +1,21 @@
 /* eslint-disable func-names, react/no-this-in-sfc,  no-unsafe-optional-chaining */
-import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { QuestionType } from 'models/enums/QuestionType.enum';
+import { fetchQuestionImage } from 'store/actions/media.action';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  currentImageURLSelector,
+  isCurrentImageLoadingSelector,
+} from 'store/selectors/media.selector';
 import ToggleButtonGroup from './ToggleButtonGroup/ToggleButtonGroup';
+import Loader from './Loader/Loader';
 
 interface QuestionProps {
   question: {
@@ -20,7 +32,7 @@ interface QuestionProps {
     questionId: string;
     options?: string[];
     name?: { en: string };
-    question_image_url?: string;
+    questionImage?: string;
   };
   onSubmit: (gridData: any) => void;
   onValidityChange: (validity: boolean) => void;
@@ -40,7 +52,12 @@ interface FormValues {
 // Using forwardRef to forward refs to the parent component
 const Question = forwardRef(
   ({ question, onSubmit, onValidityChange }: QuestionProps, ref) => {
-    const { answers, numbers } = question;
+    const { answers, numbers, questionImage } = question;
+    const dispatch = useDispatch();
+    const currentImageURL = useSelector(currentImageURLSelector);
+    const currentImageLoading = useSelector(isCurrentImageLoadingSelector);
+    const [imgURL, setImageURL] = useState<string>('');
+    const [imgLoading, setImageLoading] = useState<boolean>(false);
     const validationSchema = Yup.object({
       topAnswer: Yup.array()
         .of(
@@ -206,6 +223,22 @@ const Question = forwardRef(
     useEffect(() => {
       onValidityChange(formik.isValid); // Pass the form's validity to the parent
     }, [formik.isValid]);
+
+    useEffect(() => {
+      if (questionImage) {
+        dispatch(fetchQuestionImage(questionImage));
+      }
+    }, [questionImage]);
+
+    useEffect(() => {
+      if (currentImageURL) {
+        setImageURL(currentImageURL);
+      }
+    }, [currentImageURL]);
+
+    useEffect(() => {
+      setImageLoading(currentImageLoading);
+    }, [currentImageLoading]);
 
     return (
       <form
@@ -446,17 +479,16 @@ const Question = forwardRef(
 
         {question.questionType === QuestionType.MCQ && !!question.options && (
           <div className='flex flex-col space-y-2 justify-center items-center'>
-            {question?.question_image_url ? (
-              <img src={question.question_image_url} alt='logo' />
-            ) : (
-              <span className='mb-6'>{question?.name?.en}</span>
+            <span className='mb-6'>{question?.name?.en}</span>
+            {question?.questionImage && imgLoading && <Loader />}
+            {question?.questionImage && !!imgURL && (
+              <img src={imgURL} alt='Img' />
             )}
             <ToggleButtonGroup
               selectedValue={formik.values.mcqAnswer}
               setSelectedValue={(val) => formik.setFieldValue('mcqAnswer', val)}
               options={question.options}
             />
-
             {formik.touched.mcqAnswer && formik.errors.mcqAnswer && (
               <div className='text-red-500 text-xs'>
                 {formik.errors.mcqAnswer}
