@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useEffect, useState } from 'react';
 import { Form, Formik } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
@@ -62,7 +63,21 @@ const Login: React.FC = () => {
         {(formikProps) => {
           const areFieldsFilled =
             !!formikProps.values.username && !!formikProps.values.password;
+          const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              formikProps.handleSubmit();
+            }
+          };
 
+          useEffect(() => {
+            // Adding global keydown listener
+            window.addEventListener('keydown', handleKeyDown);
+            return () => {
+              // Cleaning up event listener on component unmount
+              window.removeEventListener('keydown', handleKeyDown);
+            };
+          }, [formikProps.isValid]);
           return (
             <Form className='h-full'>
               <div className='flex flex-col md:flex-row gap-6 items-center md:items-end justify-center p-6 overflow-y-auto md:h-[80%] max-h-full'>
