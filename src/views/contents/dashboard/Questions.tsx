@@ -15,6 +15,7 @@ import { learnerJourneySelector } from 'store/selectors/learnerJourney.selector'
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 import Confetti from 'react-confetti';
 import useWindowSize from 'hooks/useWindowSize';
+import { QuestionType } from 'models/enums/QuestionType.enum';
 
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -176,7 +177,11 @@ const Questions: React.FC = () => {
         }
         onButtonClick={handleNextClick}
         buttonDisabled={!isCompleted && (!isFormValid || isSyncing)} // Disable during sync or if the form isn't valid
-        toolTipMessage='Fill in all the empty blanks to continue'
+        toolTipMessage={
+          questions[currentQuestionIndex]?.questionType === QuestionType.MCQ
+            ? 'Select one option to continue'
+            : 'Fill in all the empty blanks to continue'
+        }
       />
     </>
   );
