@@ -129,7 +129,7 @@ export function convertToCamelCase(input: {
 } {
   return {
     fileName: input.file_name,
-    src: `${input.src}/${Date.now()}`,
+    src: `${input.src}`,
     mimeType: input.mime_type,
     mediaType: input.mediaType,
   };
