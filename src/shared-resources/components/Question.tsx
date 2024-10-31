@@ -494,7 +494,11 @@ const Question = forwardRef(
             <span className='mb-6'>{question?.name?.en}</span>
             {question?.questionImage && imgLoading && <Loader />}
             {question?.questionImage && !!imgURL && (
-              <img src={imgURL} alt='Img' />
+              <img
+                className='w-auto min-w-[30%] max-w-full h-auto max-h-[80vh] !mb-6 object-contain'
+                src={imgURL}
+                alt='Img'
+              />
             )}
             <ToggleButtonGroup
               selectedValue={formik.values.mcqAnswer}
