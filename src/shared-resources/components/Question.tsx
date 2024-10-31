@@ -57,6 +57,7 @@ const Question = forwardRef(
     const currentImageURL = useSelector(currentImageURLSelector);
     const currentImageLoading = useSelector(isCurrentImageLoadingSelector);
     const [imgURL, setImageURL] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
     const [imgLoading, setImageLoading] = useState<boolean>(false);
     const validationSchema = Yup.object({
       topAnswer: Yup.array()
@@ -240,7 +241,18 @@ const Question = forwardRef(
       setImageLoading(currentImageLoading);
     }, [currentImageLoading]);
 
-    return (
+    useEffect(() => {
+      setIsLoading(true);
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }, [question]);
+
+    return isLoading ? (
+      <Loader />
+    ) : (
       <form
         onSubmit={formik.handleSubmit}
         className='flex flex-col space-y-4 items-start'
