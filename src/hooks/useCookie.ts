@@ -5,7 +5,7 @@ const useCookie = (cookieName: string) => {
 
   useEffect(() => {
     const checkCookie = () => {
-      const cookies = document.cookie.split(';');
+      const cookies = document.cookie?.split(';');
       const exists = cookies.some((cookie) =>
         cookie.trim().startsWith(`${cookieName}=`)
       );

@@ -14,7 +14,7 @@ type QuestionData = {
 
 export function getUserInitials(name: string): string {
   // Trim and split the string into an array of words
-  const words = name.trim().split(/\s+/);
+  const words = name.trim()?.split(/\s+/);
 
   // Get the first letter of the first word and the first letter of the last word
   const firstInitial = words[0][0].toUpperCase();
