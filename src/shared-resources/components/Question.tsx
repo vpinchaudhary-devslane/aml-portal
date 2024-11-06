@@ -172,11 +172,11 @@ const Question = forwardRef(
     const formik = useFormik<FormValues>({
       initialValues: {
         topAnswer: answers?.answerTop
-          .split('')
-          .map((val) => (val === 'B' ? '' : val)),
+          ?.split('')
+          ?.map((val) => (val === 'B' ? '' : val)),
         resultAnswer: answers?.answerResult
-          .split('')
-          .map((val) => (val === 'B' ? '' : val)),
+          ?.split('')
+          ?.map((val) => (val === 'B' ? '' : val)),
         row1Answers: Array(maxLength).fill(''),
         row2Answers: Array(maxLength).fill(''),
         questionType: question.questionType,
