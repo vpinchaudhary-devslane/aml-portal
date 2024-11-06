@@ -116,8 +116,9 @@ const Question = forwardRef(
             const { questionType } = this.parent; // Access parent context
             if (questionType === QuestionType.GRID_2) {
               return (
-                value && value.length > 0 && value.every((answer) => answer)
-              ); // Check if every answer is provided
+                value && value.some((answer) => answer && answer.trim() !== '')
+              );
+              // At least one non-empty answer is required
             }
             return true; // If not grid-2, skip validation
           }
@@ -131,8 +132,9 @@ const Question = forwardRef(
             const { questionType } = this.parent; // Access parent context
             if (questionType === QuestionType.GRID_2) {
               return (
-                value && value.length > 0 && value.every((answer) => answer)
-              ); // Check if every answer is provided
+                value && value.some((answer) => answer && answer.trim() !== '')
+              );
+              // At least one non-empty answer is required
             }
             return true; // If not grid-2, skip validation
           }
@@ -289,12 +291,19 @@ const Question = forwardRef(
                       <input
                         type='text'
                         name={`topAnswer.${index}`}
+                        autoComplete='off'
                         value={char === 'B' ? '' : char} // If 'B', keep input empty
                         onChange={formik.handleChange}
                         maxLength={1}
                         className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                         onKeyPress={(e) => {
                           if (!/[0-9]/.test(e.key)) e.preventDefault(); // Only allow numbers
+                        }}
+                        onPaste={(e) => {
+                          const pasteData = e.clipboardData.getData('text');
+                          if (!/^[0-9]*$/.test(pasteData)) {
+                            e.preventDefault(); // Prevent paste if it contains non-numeric characters
+                          }
                         }}
                         disabled={
                           (answers.answerTop[index] || '') !== '' &&
@@ -346,12 +355,19 @@ const Question = forwardRef(
                   <input
                     type='text'
                     name={`resultAnswer.${index}`}
+                    autoComplete='off'
                     value={formik.values?.resultAnswer?.[index]}
                     onChange={formik.handleChange}
                     maxLength={1}
                     className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                     onKeyPress={(e) => {
                       if (!/[0-9]/.test(e.key)) e.preventDefault();
+                    }}
+                    onPaste={(e) => {
+                      const pasteData = e.clipboardData.getData('text');
+                      if (!/^[0-9]*$/.test(pasteData)) {
+                        e.preventDefault(); // Prevent paste if it contains non-numeric characters
+                      }
                     }}
                     disabled={
                       (answers.answerResult[index] || '') !== '' &&
@@ -403,12 +419,19 @@ const Question = forwardRef(
                       key={`row1-${index}`}
                       type='text'
                       name={`row1Answers.${index}`}
+                      autoComplete='off'
                       value={formik.values?.row1Answers?.[index]}
                       onChange={formik.handleChange}
                       maxLength={1}
                       className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                       onKeyPress={(e) => {
                         if (!/[0-9]/.test(e.key)) e.preventDefault();
+                      }}
+                      onPaste={(e) => {
+                        const pasteData = e.clipboardData.getData('text');
+                        if (!/^[0-9]*$/.test(pasteData)) {
+                          e.preventDefault(); // Prevent paste if it contains non-numeric characters
+                        }
                       }}
                     />
                     {Array.isArray(formik.touched.row1Answers) &&
@@ -439,10 +462,17 @@ const Question = forwardRef(
                       name={`row2Answers.${index}`}
                       value={formik.values?.row2Answers?.[index]}
                       onChange={formik.handleChange}
+                      autoComplete='off'
                       maxLength={1}
                       className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
                       onKeyPress={(e) => {
                         if (!/[0-9]/.test(e.key)) e.preventDefault();
+                      }}
+                      onPaste={(e) => {
+                        const pasteData = e.clipboardData.getData('text');
+                        if (!/^[0-9]*$/.test(pasteData)) {
+                          e.preventDefault(); // Prevent paste if it contains non-numeric characters
+                        }
                       }}
                     />
                     {Array.isArray(formik.touched.row2Answers) &&
@@ -469,6 +499,7 @@ const Question = forwardRef(
               <input
                 type='text'
                 name='fibAnswer'
+                autoComplete='off'
                 value={formik.values.fibAnswer}
                 onChange={formik.handleChange}
                 maxLength={9}
@@ -476,6 +507,12 @@ const Question = forwardRef(
                   // Prevent non-numeric key presses
                   if (!/[0-9]/.test(e.key)) {
                     e.preventDefault();
+                  }
+                }}
+                onPaste={(e) => {
+                  const pasteData = e.clipboardData.getData('text');
+                  if (!/^[0-9]*$/.test(pasteData)) {
+                    e.preventDefault(); // Prevent paste if it contains non-numeric characters
                   }
                 }}
                 className='border-2 border-gray-900 rounded-[10px] p-2 w-full h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
