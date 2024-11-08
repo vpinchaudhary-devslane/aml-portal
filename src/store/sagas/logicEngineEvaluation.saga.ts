@@ -4,10 +4,7 @@ import { StoreAction } from 'models/StoreAction';
 
 import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
-import {
-  fetchLogicEngineEvaluationCompleted,
-  fetchLogicEngineEvaluationError,
-} from 'store/actions/logicEngineEvaluation.action';
+import { fetchLogicEngineEvaluationError } from 'store/actions/logicEngineEvaluation.action';
 import { logicEngineEvalutionService } from 'services/api-services/logicEngineEvaluationService';
 import { localStorageService } from 'services/LocalStorageService';
 
@@ -18,17 +15,19 @@ function* LogicEngineEvaluationFetchSaga({
     const response = yield call(
       logicEngineEvalutionService.fetchLogicEngineEvaluation,
       {
-        learner_id: payload,
+        learner_id: payload.learnerId,
       }
     );
     // not needed
     // yield put(fetchLogicEngineEvaluationCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
       const hasLocalData = localStorageService.getLearnerResponseData(
-        String(payload)
+        String(payload.learnerId)
       );
       if (hasLocalData) {
         yield put(navigateTo('/continue-journey'));
+      } else if (payload?.goToInstructions) {
+        yield put(navigateTo('/instructions'));
       } else {
         yield put(navigateTo('/welcome'));
       }
