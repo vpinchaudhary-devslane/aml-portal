@@ -4,11 +4,11 @@ import ProfileWithMenu from '../../shared-resources/components/ProfileWithMenu/P
 import { AuthContext } from '../../context/AuthContext';
 
 type Props = {
-  leanrerId?: number;
+  learnerId?: string;
   username?: string;
 };
 
-const Header: React.FC<Props> = ({ leanrerId, username }) => (
+const Header: React.FC<Props> = ({ learnerId, username }) => (
   <div className='p-4 border-b-[1px] border-black flex justify-between'>
     <div className='flex gap-4 items-center'>
       <img
@@ -21,14 +21,10 @@ const Header: React.FC<Props> = ({ leanrerId, username }) => (
       </p>
     </div>
 
-    {leanrerId && (
+    {learnerId && (
       <AuthContext.Consumer>
         {({ onLogout }) => (
-          <ProfileWithMenu
-            learnerId={leanrerId}
-            onLogout={onLogout}
-            username={username}
-          />
+          <ProfileWithMenu onLogout={onLogout} username={username} />
         )}
       </AuthContext.Consumer>
     )}

@@ -9,6 +9,11 @@ export const isSyncInProgressSelector = createSelector(
   (state: SyncResponseState) => Boolean(state.loading)
 );
 
+export const isIntermediateSyncInProgressSelector = createSelector(
+  [syncResponseState],
+  (state: SyncResponseState) => Boolean(state.intermediateLoading)
+);
+
 export const syncResponseErrorSelector = createSelector(
   [syncResponseState],
   (state: SyncResponseState) => state.error

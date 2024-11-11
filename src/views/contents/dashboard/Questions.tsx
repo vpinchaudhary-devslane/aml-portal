@@ -16,7 +16,10 @@ import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 import Confetti from 'react-confetti';
 import useWindowSize from 'hooks/useWindowSize';
 import { QuestionType } from 'models/enums/QuestionType.enum';
-import { isSyncInProgressSelector } from 'store/selectors/syncResponseSelector';
+import {
+  isIntermediateSyncInProgressSelector,
+  isSyncInProgressSelector,
+} from 'store/selectors/syncResponseSelector';
 
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -24,11 +27,13 @@ const Questions: React.FC = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [submittedAnswers, setSubmittedAnswers] = useState<any[]>([]);
   const [isCompleted, setIsCompleted] = useState(false); // State to track if the set is completed
-  const [isSyncing, setIsSyncing] = useState(false); // State to manage sync loading
   const questionSet = useSelector(questionsSetSelector);
   const learnerId = useSelector(learnerIdSelector);
   const learnerJourney = useSelector(learnerJourneySelector);
-  const syncLoadingSelector = useSelector(isSyncInProgressSelector);
+  const isSyncing = useSelector(isSyncInProgressSelector);
+  const isIntermediateSyncing = useSelector(
+    isIntermediateSyncInProgressSelector
+  );
   const dispatch = useDispatch();
   const questionRef = useRef<{ submitForm: () => void } | null>(null);
   const { width, height } = useWindowSize();
@@ -121,10 +126,11 @@ const Questions: React.FC = () => {
           questionSet?.identifier
         );
         if (!!learnerId && payload.length) {
-          localStorageService.saveLearnerResponseData(
-            String(learnerId),
-            payload
-          );
+          const keyName = isIntermediateSyncing
+            ? `${learnerId}_temp`
+            : learnerId;
+          console.log('MAKING ENTRY for key:', keyName);
+          localStorageService.saveLearnerResponseData(keyName, payload);
         }
       }
 
@@ -137,10 +143,15 @@ const Questions: React.FC = () => {
       const learnerResponseData = localStorageService.getLearnerResponseData(
         String(learnerId)
       );
+      const learnerTempResponseData =
+        localStorageService.getLearnerResponseData(`${learnerId}_temp`);
       dispatch(
         syncFinalLearnerResponse({
           learner_id: learnerId,
-          questions_data: learnerResponseData,
+          questions_data: [
+            ...(learnerResponseData || []),
+            ...(learnerTempResponseData || []),
+          ],
         })
       );
       setIsCompleted(true); // to be moved in store
@@ -148,10 +159,6 @@ const Questions: React.FC = () => {
   };
 
   const currentQuestion = questions[currentQuestionIndex];
-
-  useEffect(() => {
-    setIsSyncing(syncLoadingSelector);
-  }, [syncLoadingSelector]);
 
   return (
     <>

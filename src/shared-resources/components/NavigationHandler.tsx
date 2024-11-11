@@ -24,7 +24,7 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
       navigate(navigationPath); // Perform the navigation
       dispatch({ type: 'CLEAR_NAVIGATION_PATH' }); // Clear the navigation path after navigating
     }
-  }, [navigationPath, navigate, dispatch]);
+  }, [navigationPath, navigate]);
 
   useEffect(() => {
     // Declare a variable to hold the interval ID
@@ -63,7 +63,7 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
         clearInterval(intervalId);
       }
     };
-  }, [learnerId, dispatch]);
+  }, [learnerId]);
 
   return <>{children}</>; // Render the children
 };

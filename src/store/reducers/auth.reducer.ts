@@ -4,7 +4,7 @@ import { AuthActionType } from 'store/actions/actions.constants';
 import { User } from '../../models/entities/User';
 
 export interface AuthState {
-  learnerId?: number;
+  learnerId?: string;
   loading?: boolean;
   error?: string;
   user?: User;
