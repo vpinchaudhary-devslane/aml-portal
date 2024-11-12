@@ -16,16 +16,15 @@ function* SyncLearnerResponseSaga({
       syncLearnerResponseService.syncLearnerResponse,
       payload
     );
-    yield put(syncLearnerResponseCompleted(response.result?.data?.message));
     if (response?.responseCode === 'OK') {
       // clearing local storage now as data sync completed
       const tempKey = `${payload.learner_id}_temp`;
       const originalKey = payload.learner_id;
       localStorageService.deleteLearnerResponseData(originalKey);
+      yield put(syncLearnerResponseCompleted(response.result?.data?.message));
       const learnerTempData =
         localStorageService.getLearnerResponseData(tempKey);
       if (learnerTempData) {
-        console.log('MAKING ENTRY FOR key', originalKey);
         localStorageService.saveLearnerResponseData(
           originalKey,
           learnerTempData
