@@ -35,6 +35,7 @@ export const syncResponseReducer: Reducer<SyncResponseState> = (
       case SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_ERROR: {
         const error = action.payload as string;
         draft.loading = false;
+        draft.intermediateLoading = false;
         draft.error = error;
         break;
       }
