@@ -1,14 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
 import ConfirmationDialog from 'shared-resources/components/CustomDialog/ConfirmationDialog';
 import { localStorageService } from 'services/LocalStorageService';
 import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
@@ -78,7 +70,7 @@ const Layout: React.FC = () => {
   return isUserLoading ? null : (
     <AuthContext.Provider value={authContextValue}>
       <div className='flex flex-col h-full'>
-        <Header leanrerId={learnerId} username={userSelector?.username} />
+        <Header learnerId={learnerId} username={userSelector?.username} />
         <div className='flex-1'>
           <Outlet />
         </div>

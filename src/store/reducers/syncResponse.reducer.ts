@@ -4,6 +4,7 @@ import { SyncLearnerResponseActionType } from 'store/actions/actions.constants';
 
 export interface SyncResponseState {
   loading?: boolean;
+  intermediateLoading?: boolean;
   error?: string;
 }
 
@@ -22,8 +23,13 @@ export const syncResponseReducer: Reducer<SyncResponseState> = (
         draft.loading = true;
         break;
       }
+      case SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE: {
+        draft.intermediateLoading = true;
+        break;
+      }
       case SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_COMPLETED: {
         draft.loading = false;
+        draft.intermediateLoading = false;
         break;
       }
       case SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_ERROR: {

@@ -19,7 +19,19 @@ function* SyncLearnerResponseSaga({
     yield put(syncLearnerResponseCompleted(response.result?.data?.message));
     if (response?.responseCode === 'OK') {
       // clearing local storage now as data sync completed
-      localStorageService.deleteLearnerResponseData(payload.learner_id);
+      const tempKey = `${payload.learner_id}_temp`;
+      const originalKey = payload.learner_id;
+      localStorageService.deleteLearnerResponseData(originalKey);
+      const learnerTempData =
+        localStorageService.getLearnerResponseData(tempKey);
+      if (learnerTempData) {
+        console.log('MAKING ENTRY FOR key', originalKey);
+        localStorageService.saveLearnerResponseData(
+          originalKey,
+          learnerTempData
+        );
+        localStorageService.deleteLearnerResponseData(tempKey);
+      }
     }
   } catch (e: any) {
     yield put(

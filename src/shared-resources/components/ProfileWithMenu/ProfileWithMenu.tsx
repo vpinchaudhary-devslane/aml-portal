@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -7,16 +7,11 @@ import './ProfileWithMenu.scss';
 import { getUserInitials } from 'shared-resources/utils/helpers';
 
 type Props = {
-  learnerId?: number;
   onLogout?: () => void;
   username?: string;
 };
 
-const ProfileWithMenu: React.FC<Props> = ({
-  onLogout,
-  learnerId,
-  username,
-}) => {
+const ProfileWithMenu: React.FC<Props> = ({ onLogout, username }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
