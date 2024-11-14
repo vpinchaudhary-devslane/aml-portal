@@ -16,32 +16,32 @@ import { toastService } from '../../services/ToastService';
 function* SyncLearnerResponseSaga({
   payload,
 }: StoreAction<SyncLearnerResponseActionType>): any {
-  try {
-    const { learnerId, questionSetId, logoutOnSuccess } = payload;
-    const criteria = {
-      status: IDBDataStatus.NOOP,
-      learner_id: learnerId,
-      question_set_id: questionSetId,
-    };
-    const learnerResponseData = yield call(
-      indexedDBService.queryObjectsByKeys,
-      criteria
-    );
+  const { learnerId, questionSetId, logoutOnSuccess } = payload;
+  const criteria = {
+    status: IDBDataStatus.NOOP,
+    learner_id: learnerId,
+    question_set_id: questionSetId,
+  };
+  const learnerResponseData = yield call(
+    indexedDBService.queryObjectsByKeys,
+    criteria
+  );
 
-    if (!learnerResponseData.length) {
-      console.log('No data for sync');
-      yield put(syncLearnerResponseCompleted());
-      if (logoutOnSuccess) {
-        yield put(authLogoutAction());
-      }
-      return;
-    }
-
+  if (!learnerResponseData.length) {
+    console.log('No data for sync');
+    yield put(syncLearnerResponseCompleted());
     if (logoutOnSuccess) {
-      toastService.showInfo('Saving progress');
+      yield put(authLogoutAction());
     }
+    return;
+  }
 
-    const objIds = learnerResponseData.map((data: any) => data.id) as number[];
+  if (logoutOnSuccess) {
+    toastService.showInfo('Saving progress');
+  }
+
+  const objIds = learnerResponseData.map((data: any) => data.id) as number[];
+  try {
     const learnerResponseDataQIDs = learnerResponseData.map(
       (data: any) => data.question_id
     ) as string[];
@@ -122,6 +122,10 @@ function* SyncLearnerResponseSaga({
       }
     }
   } catch (e: any) {
+    yield call(indexedDBService.updateStatusByIds, objIds, IDBDataStatus.NOOP);
+    if (logoutOnSuccess) {
+      toastService.showError('Progress could not be saved');
+    }
     yield put(
       syncLearnerResponseError(
         (e?.errors && e.errors[0]?.message) || e?.message
