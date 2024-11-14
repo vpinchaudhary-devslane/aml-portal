@@ -6,8 +6,8 @@ import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
 import { fetchLogicEngineEvaluationError } from 'store/actions/logicEngineEvaluation.action';
 import { logicEngineEvalutionService } from 'services/api-services/logicEngineEvaluationService';
+import _ from 'lodash';
 import { indexedDBService } from '../../services/IndexedDBService';
-import { IDBDataStatus } from '../../types/enum';
 
 function* LogicEngineEvaluationFetchSaga({
   payload,
@@ -24,8 +24,6 @@ function* LogicEngineEvaluationFetchSaga({
     // yield put(fetchLogicEngineEvaluationCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
       const newQSID = response?.result?.data?.question_set_id;
-      const completedQuestionIds =
-        response.result?.data?.completed_question_ids || [];
 
       const allLocalData = yield call(
         indexedDBService.queryObjectsByKey,
@@ -41,28 +39,11 @@ function* LogicEngineEvaluationFetchSaga({
        * Clearing redundant data
        */
       if (localDataForNewQSID.length < allLocalData.length) {
-        const localDataIdsForOldQS = (allLocalData || [])
-          .filter((data: any) => data.question_set_id !== newQSID)
-          .map((data: any) => data.id);
+        const localDataIdsForOldQS = _.difference(
+          allLocalData,
+          localDataForNewQSID
+        ).map((data: any) => data.id);
         yield call(indexedDBService.deleteObjectsByIds, localDataIdsForOldQS);
-      }
-
-      /**
-       * Reverse Sync
-       */
-      const idbUnsyncedDataIds = (localDataForNewQSID || [])
-        .filter(
-          (data: any) =>
-            data?.status === IDBDataStatus.SYNCING &&
-            completedQuestionIds.includes(data.question_id)
-        )
-        .map((data: any) => data.id);
-      if (idbUnsyncedDataIds.length > 0) {
-        yield call(
-          indexedDBService.updateStatusByIds,
-          idbUnsyncedDataIds,
-          IDBDataStatus.SYNCED
-        );
       }
 
       if (localDataForNewQSID.length) {

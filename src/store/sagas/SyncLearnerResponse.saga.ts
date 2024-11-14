@@ -6,6 +6,7 @@ import {
   syncLearnerResponseError,
 } from 'store/actions/syncLearnerResponse.action';
 import { syncLearnerResponseService } from 'services/api-services/syncLearnerResponse';
+import _ from 'lodash';
 import { IDBDataStatus } from '../../types/enum';
 import { indexedDBService } from '../../services/IndexedDBService';
 import { LearnerJourneyStatus } from '../../models/enums/learnerJourney.enum';
@@ -26,6 +27,7 @@ function* SyncLearnerResponseSaga({
 
     if (!learnerResponseData.length) {
       console.log('No data for sync');
+      yield put(syncLearnerResponseCompleted());
       return;
     }
 
@@ -47,18 +49,29 @@ function* SyncLearnerResponseSaga({
 
     if (response?.responseCode === 'OK') {
       const learnerJourney = response?.result?.data;
-      // updating status of data entries
-      yield call(
-        indexedDBService.updateStatusByIds,
-        objIds,
-        IDBDataStatus.SYNCED
-      );
-
       const {
         status,
         question_set_id: completedQuestionSetId,
         completed_question_ids: completedQuestionIds,
       } = learnerJourney;
+
+      const syncedIds = _.intersection(objIds, completedQuestionIds);
+      // updating status of data entries
+      yield call(
+        indexedDBService.updateStatusByIds,
+        syncedIds,
+        IDBDataStatus.SYNCED
+      );
+
+      if (syncedIds.length !== objIds.length) {
+        const unsyncedIds = _.difference(objIds, syncedIds);
+        yield call(
+          indexedDBService.updateStatusByIds,
+          unsyncedIds,
+          IDBDataStatus.NOOP
+        );
+      }
+
       if (status === LearnerJourneyStatus.COMPLETED) {
         /**
          * Delete all entries of completed QS for loggedInUser
@@ -83,7 +96,7 @@ function* SyncLearnerResponseSaga({
         }
       }
 
-      yield put(syncLearnerResponseCompleted(response.result?.data?.message));
+      yield put(syncLearnerResponseCompleted());
     }
   } catch (e: any) {
     yield put(

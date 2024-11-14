@@ -32,7 +32,7 @@ const Questions: React.FC = () => {
   const learnerId = useSelector(learnerIdSelector);
   const learnerJourney = useSelector(learnerJourneySelector);
   const isSyncing = useSelector(isSyncInProgressSelector);
-  const isIntermediateSyncing = useSelector(
+  const isIntermediatelySyncing = useSelector(
     isIntermediateSyncInProgressSelector
   );
   const dispatch = useDispatch();
@@ -82,14 +82,14 @@ const Questions: React.FC = () => {
 
   useEffect(() => {
     const syncData = async () => {
-      if (learnerId && !isIntermediateSyncing && !isSyncing) {
+      if (learnerId && !isIntermediatelySyncing && !isSyncing) {
         dispatch(syncFinalLearnerResponse(learnerId));
-        setIsCompleted(true); // to be moved in store
       }
     };
 
     if (questions.length > 0 && currentQuestionIndex === questions.length) {
       syncData();
+      setIsCompleted(true); // to be moved in store
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, learnerId, questions]);
@@ -125,13 +125,17 @@ const Questions: React.FC = () => {
       const learnerResponseData = (await indexedDBService.queryObjectsByKeys(
         criteria
       )) as any[];
-      if (learnerResponseData.length && !isIntermediateSyncing && !isSyncing) {
+      if (
+        learnerResponseData.length &&
+        !isIntermediatelySyncing &&
+        !isSyncing
+      ) {
         /**
          * handling the case when after completing the question set, some questions' data is not yet synced
          * so syncing it before calling evaluate API
          */
-        setWaitingBeforeEvaluation(true);
         dispatch(syncFinalLearnerResponse(learnerId));
+        setWaitingBeforeEvaluation(true);
         return;
       }
       evaluateLearner();

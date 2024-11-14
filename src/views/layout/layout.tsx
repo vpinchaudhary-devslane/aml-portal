@@ -16,6 +16,7 @@ import {
   isIntermediateSyncInProgressSelector,
   isSyncInProgressSelector,
 } from '../../store/selectors/syncResponseSelector';
+import { toastService } from '../../services/ToastService';
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
@@ -49,7 +50,9 @@ const Layout: React.FC = () => {
       syncLearnerResponseData();
       dispatch(authLogoutAction());
     } else {
-      // TODO: Show toast: Sync in progress
+      toastService.showError(
+        'Sync in progress. Please try again in some time.'
+      );
     }
   };
 

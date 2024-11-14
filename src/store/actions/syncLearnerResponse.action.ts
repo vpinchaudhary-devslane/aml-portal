@@ -10,9 +10,8 @@ export const syncFinalLearnerResponse = (learnerId: string) => ({
   payload: { learnerId },
 });
 
-export const syncLearnerResponseCompleted = (message: string) => ({
+export const syncLearnerResponseCompleted = () => ({
   type: SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_COMPLETED,
-  payload: message,
 });
 
 export const syncLearnerResponseError = (error: string) => ({
