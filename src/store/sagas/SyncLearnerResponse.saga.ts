@@ -10,15 +10,18 @@ import _ from 'lodash';
 import { IDBDataStatus } from '../../types/enum';
 import { indexedDBService } from '../../services/IndexedDBService';
 import { LearnerJourneyStatus } from '../../models/enums/learnerJourney.enum';
+import { authLogoutAction } from '../actions/auth.action';
+import { toastService } from '../../services/ToastService';
 
 function* SyncLearnerResponseSaga({
   payload,
 }: StoreAction<SyncLearnerResponseActionType>): any {
   try {
-    const { learnerId } = payload;
+    const { learnerId, questionSetId, logoutOnSuccess } = payload;
     const criteria = {
       status: IDBDataStatus.NOOP,
       learner_id: learnerId,
+      question_set_id: questionSetId,
     };
     const learnerResponseData = yield call(
       indexedDBService.queryObjectsByKeys,
@@ -28,7 +31,14 @@ function* SyncLearnerResponseSaga({
     if (!learnerResponseData.length) {
       console.log('No data for sync');
       yield put(syncLearnerResponseCompleted());
+      if (logoutOnSuccess) {
+        yield put(authLogoutAction());
+      }
       return;
+    }
+
+    if (logoutOnSuccess) {
+      toastService.showInfo('Saving progress');
     }
 
     const objIds = learnerResponseData.map((data: any) => data.id) as number[];
@@ -106,6 +116,10 @@ function* SyncLearnerResponseSaga({
       }
 
       yield put(syncLearnerResponseCompleted());
+      if (logoutOnSuccess) {
+        toastService.showInfo('Progress saved successfully.');
+        yield put(authLogoutAction());
+      }
     }
   } catch (e: any) {
     yield put(

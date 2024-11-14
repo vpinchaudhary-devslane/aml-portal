@@ -3,13 +3,13 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { navigationPathSelector } from 'store/selectors/navigation.selector';
-import { localStorageService } from 'services/LocalStorageService';
 import { learnerIdSelector } from 'store/selectors/auth.selector';
 import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
 import {
   isIntermediateSyncInProgressSelector,
   isSyncInProgressSelector,
 } from '../../store/selectors/syncResponseSelector';
+import { questionsSetSelector } from '../../store/selectors/questionSet.selector';
 
 // Define props for NavigationHandler
 type NavigationHandlerProps = {
@@ -27,23 +27,26 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
     isIntermediateSyncInProgressSelector
   );
 
+  const questionSet = useSelector(questionsSetSelector);
+
   useEffect(() => {
     if (navigationPath) {
       navigate(navigationPath); // Perform the navigation
       dispatch({ type: 'CLEAR_NAVIGATION_PATH' }); // Clear the navigation path after navigating
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigationPath, navigate]);
+
+  // Function to sync learner response data
+  const syncLearnerResponseData = () => {
+    if (learnerId && !isSyncing && !isIntermediateSyncing && questionSet) {
+      dispatch(syncLearnerResponse(learnerId, questionSet.identifier));
+    }
+  };
 
   useEffect(() => {
     // Declare a variable to hold the interval ID
     let intervalId: any | null = null;
-
-    // Function to sync learner response data
-    const syncLearnerResponseData = () => {
-      if (learnerId && !isSyncing && !isIntermediateSyncing) {
-        dispatch(syncLearnerResponse(learnerId));
-      }
-    };
 
     if (learnerId) {
       intervalId = setTimeout(() => {

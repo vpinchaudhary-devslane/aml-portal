@@ -81,9 +81,9 @@ const Questions: React.FC = () => {
   }, [questionSet, learnerJourney, learnerId]);
 
   useEffect(() => {
-    const syncData = async () => {
-      if (learnerId && !isIntermediatelySyncing && !isSyncing) {
-        dispatch(syncFinalLearnerResponse(learnerId));
+    const syncData = () => {
+      if (learnerId && !isIntermediatelySyncing && !isSyncing && questionSet) {
+        dispatch(syncFinalLearnerResponse(learnerId, questionSet.identifier));
       }
     };
 
@@ -92,7 +92,7 @@ const Questions: React.FC = () => {
       setIsCompleted(true); // to be moved in store
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex, learnerId, questions]);
+  }, [currentQuestionIndex, learnerId, questions, questionSet]);
 
   const evaluateLearner = () => {
     if (learnerId) {
@@ -127,6 +127,7 @@ const Questions: React.FC = () => {
       )) as any[];
       if (
         learnerResponseData.length &&
+        questionSet &&
         !isIntermediatelySyncing &&
         !isSyncing
       ) {
@@ -134,7 +135,7 @@ const Questions: React.FC = () => {
          * handling the case when after completing the question set, some questions' data is not yet synced
          * so syncing it before calling evaluate API
          */
-        dispatch(syncFinalLearnerResponse(learnerId));
+        dispatch(syncFinalLearnerResponse(learnerId, questionSet.identifier));
         setWaitingBeforeEvaluation(true);
         return;
       }

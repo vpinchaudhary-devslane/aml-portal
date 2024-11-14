@@ -17,6 +17,7 @@ import {
   isSyncInProgressSelector,
 } from '../../store/selectors/syncResponseSelector';
 import { toastService } from '../../services/ToastService';
+import { questionsSetSelector } from '../../store/selectors/questionSet.selector';
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Layout: React.FC = () => {
   const isIntermediateSyncing = useSelector(
     isIntermediateSyncInProgressSelector
   );
+  const questionSet = useSelector(questionsSetSelector);
 
   const [isDialogOpen, setDialogOpen] = useState(false);
 
@@ -40,8 +42,8 @@ const Layout: React.FC = () => {
   }, [location, learnerId, isUserLoading, navigate]);
 
   const syncLearnerResponseData = () => {
-    if (learnerId) {
-      dispatch(syncLearnerResponse(learnerId));
+    if (learnerId && questionSet) {
+      dispatch(syncLearnerResponse(learnerId, questionSet.identifier, true));
     }
   };
 
