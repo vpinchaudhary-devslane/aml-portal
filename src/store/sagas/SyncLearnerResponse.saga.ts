@@ -32,6 +32,9 @@ function* SyncLearnerResponseSaga({
     }
 
     const objIds = learnerResponseData.map((data: any) => data.id) as number[];
+    const learnerResponseDataQIDs = learnerResponseData.map(
+      (data: any) => data.question_id
+    ) as string[];
 
     yield call(
       indexedDBService.updateStatusByIds,
@@ -55,7 +58,13 @@ function* SyncLearnerResponseSaga({
         completed_question_ids: completedQuestionIds,
       } = learnerJourney;
 
-      const syncedIds = _.intersection(objIds, completedQuestionIds);
+      const syncedIdentifiers = _.intersection(
+        learnerResponseDataQIDs,
+        completedQuestionIds
+      );
+      const syncedIds = learnerResponseData
+        .filter((data: any) => syncedIdentifiers.includes(data.question_id))
+        .map((data: any) => data.id);
       // updating status of data entries
       yield call(
         indexedDBService.updateStatusByIds,
