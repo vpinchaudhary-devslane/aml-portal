@@ -50,7 +50,6 @@ const Layout: React.FC = () => {
   const onLogout = () => {
     if (!isSyncing && !isIntermediateSyncing) {
       syncLearnerResponseData();
-      dispatch(authLogoutAction());
     } else {
       toastService.showError(
         'Sync in progress. Please try again in some time.'
