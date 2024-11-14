@@ -1,18 +1,24 @@
 import { SyncLearnerResponseActionType } from './actions.constants';
 
-export const syncLearnerResponse = (data: any) => ({
+export const syncLearnerResponse = (
+  learnerId: string,
+  questionSetId: string,
+  logoutOnSuccess = false
+) => ({
   type: SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE,
-  payload: data,
+  payload: { learnerId, questionSetId, logoutOnSuccess },
 });
 
-export const syncFinalLearnerResponse = (data: any) => ({
+export const syncFinalLearnerResponse = (
+  learnerId: string,
+  questionSetId: string
+) => ({
   type: SyncLearnerResponseActionType.SYNC_FINAL_LEARNER_RESPONSE,
-  payload: data,
+  payload: { learnerId, questionSetId },
 });
 
-export const syncLearnerResponseCompleted = (message: string) => ({
+export const syncLearnerResponseCompleted = () => ({
   type: SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE_COMPLETED,
-  payload: message,
 });
 
 export const syncLearnerResponseError = (error: string) => ({

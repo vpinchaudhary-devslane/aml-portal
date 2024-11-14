@@ -73,47 +73,54 @@ export const transformQuestions = (apiQuestions: any): any =>
     };
   });
 
+export function convertSingleResponseToLearnerResponse(
+  item: any,
+  questionSetId: string
+): QuestionData {
+  const { questionId, start_time, end_time, answers } = item;
+
+  let result = '';
+  let answer_top = '';
+
+  if (answers?.resultAnswer) {
+    result = answers.resultAnswer.join('');
+  } else if (answers?.fibAnswer) {
+    result = answers.fibAnswer;
+  } else if (answers?.mcqAnswer) {
+    result = answers.mcqAnswer;
+  } else if (answers?.row2Answers) {
+    result = answers.row2Answers.join('');
+  }
+
+  if (answers?.topAnswer) {
+    answer_top = answers.topAnswer.join('');
+  } else if (answers?.row1Answers) {
+    answer_top = answers.row1Answers.join('');
+  }
+
+  // Build the learner response
+  const learner_response: LearnerResponse = { result };
+  if (answer_top) {
+    learner_response.answer_top = answer_top;
+  }
+
+  // Return the transformed question data
+  return {
+    question_id: questionId,
+    ...(start_time && { start_time }), // Include start_time only if it has a value
+    ...(end_time && { end_time }), // Include end_time only if it has a value
+    question_set_id: questionSetId,
+    learner_response,
+  };
+}
+
 export function convertResponseToLearnerResponse(
   response: any[],
   questionSetId: string
 ): QuestionData[] {
-  return response.map((item) => {
-    const { questionId, start_time, end_time, answers } = item;
-
-    let result = '';
-    let answer_top = '';
-
-    if (answers?.resultAnswer) {
-      result = answers.resultAnswer.join('');
-    } else if (answers?.fibAnswer) {
-      result = answers.fibAnswer;
-    } else if (answers?.mcqAnswer) {
-      result = answers.mcqAnswer;
-    } else if (answers?.row2Answers) {
-      result = answers.row2Answers.join('');
-    }
-
-    if (answers?.topAnswer) {
-      answer_top = answers.topAnswer.join('');
-    } else if (answers?.row1Answers) {
-      answer_top = answers.row1Answers.join('');
-    }
-
-    // Build the learner response
-    const learner_response: LearnerResponse = { result };
-    if (answer_top) {
-      learner_response.answer_top = answer_top;
-    }
-
-    // Return the transformed question data
-    return {
-      question_id: questionId,
-      ...(start_time && { start_time }), // Include start_time only if it has a value
-      ...(end_time && { end_time }), // Include end_time only if it has a value
-      question_set_id: questionSetId,
-      learner_response,
-    };
-  });
+  return response.map((item) =>
+    convertSingleResponseToLearnerResponse(item, questionSetId)
+  );
 }
 
 export function convertToCamelCase(input: {

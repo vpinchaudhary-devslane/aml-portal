@@ -29,7 +29,8 @@ const Login: React.FC = () => {
     if (!localStorageService.getCSRFToken()) {
       dispatch(fetchCSRFToken());
     }
-  }, [dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const initialValues = {
     username: '',

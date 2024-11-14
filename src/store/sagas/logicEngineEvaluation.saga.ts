@@ -6,32 +6,54 @@ import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
 import { fetchLogicEngineEvaluationError } from 'store/actions/logicEngineEvaluation.action';
 import { logicEngineEvalutionService } from 'services/api-services/logicEngineEvaluationService';
-import { localStorageService } from 'services/LocalStorageService';
+import _ from 'lodash';
+import { indexedDBService } from '../../services/IndexedDBService';
 
 function* LogicEngineEvaluationFetchSaga({
   payload,
 }: StoreAction<LogicEngineActionType>): any {
   try {
+    const { learnerId, goToInstructions } = payload;
     const response = yield call(
       logicEngineEvalutionService.fetchLogicEngineEvaluation,
       {
-        learner_id: payload.learnerId,
+        learner_id: learnerId,
       }
     );
     // not needed
     // yield put(fetchLogicEngineEvaluationCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
-      const hasLocalData = localStorageService.getLearnerResponseData(
-        String(payload.learnerId)
+      const newQSID = response?.result?.data?.question_set_id;
+
+      const allLocalData = yield call(
+        indexedDBService.queryObjectsByKey,
+        'learner_id',
+        learnerId
       );
-      if (hasLocalData) {
+
+      const localDataForNewQSID = (allLocalData || []).filter(
+        (data: any) => data.question_set_id === newQSID
+      );
+
+      /**
+       * Clearing redundant data
+       */
+      if (localDataForNewQSID.length < allLocalData.length) {
+        const localDataIdsForOldQS = _.difference(
+          allLocalData,
+          localDataForNewQSID
+        ).map((data: any) => data.id);
+        yield call(indexedDBService.deleteObjectsByIds, localDataIdsForOldQS);
+      }
+
+      if (localDataForNewQSID.length) {
         yield put(navigateTo('/continue-journey'));
-      } else if (payload?.goToInstructions) {
+      } else if (goToInstructions) {
         yield put(navigateTo('/instructions'));
       } else {
         yield put(navigateTo('/welcome'));
       }
-      yield put(questionSetFetchAction(response.result.data.question_set_id));
+      yield put(questionSetFetchAction(newQSID));
     } else {
       yield put(navigateTo('/completed'));
     }

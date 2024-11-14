@@ -10,7 +10,8 @@ import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
 import { fetchLogicEngineEvaluation } from 'store/actions/logicEngineEvaluation.action';
 import { LearnerJourneyStatus } from 'models/enums/learnerJourney.enum';
-import { localStorageService } from 'services/LocalStorageService';
+import { IDBDataStatus } from '../../types/enum';
+import { indexedDBService } from '../../services/IndexedDBService';
 
 function* LearnerJourneyFetchSaga({
   payload,
@@ -23,8 +24,58 @@ function* LearnerJourneyFetchSaga({
     const questionSetId = response?.result?.data?.question_set_id;
     const isInProgress =
       response?.result?.data?.status === LearnerJourneyStatus.IN_PROGRESS;
-    const hasLearnerData =
-      !!localStorageService.getLearnerResponseData(payload);
+    const criteria = {
+      status: IDBDataStatus.NOOP,
+      learner_id: payload,
+    };
+    const learnerResponseData = yield call(
+      indexedDBService.queryObjectsByKeys,
+      criteria
+    );
+    const hasLearnerData = learnerResponseData.length > 0;
+
+    /**
+     * Reverse Syncing
+     */
+    const completedQuestionIds =
+      response?.result?.data?.completed_question_ids || [];
+    const localDBDataForCurrentQSID = yield call(
+      indexedDBService.queryObjectsByKeys,
+      {
+        learner_id: payload,
+        question_set_id: questionSetId,
+      }
+    );
+    // DATA SYNCED AT BE, BUT NOT UPDATED IN FE
+    const idbUnsyncedDataIds = (localDBDataForCurrentQSID || [])
+      .filter(
+        (data: any) =>
+          [IDBDataStatus.SYNCING, IDBDataStatus.NOOP].includes(data?.status) &&
+          completedQuestionIds.includes(data.question_id)
+      )
+      .map((data: any) => data.id);
+    if (idbUnsyncedDataIds.length > 0) {
+      yield call(
+        indexedDBService.updateStatusByIds,
+        idbUnsyncedDataIds,
+        IDBDataStatus.SYNCED
+      );
+    }
+    // DATA MARKED AS SYNCING ON FE, BUT NEVER SYNCED ON BE
+    const idbDataStuckInSyncingStage = (localDBDataForCurrentQSID || [])
+      .filter(
+        (data: any) =>
+          [IDBDataStatus.SYNCING].includes(data?.status) &&
+          !completedQuestionIds.includes(data.question_id)
+      )
+      .map((data: any) => data.id);
+    if (idbDataStuckInSyncingStage.length > 0) {
+      yield call(
+        indexedDBService.updateStatusByIds,
+        idbDataStuckInSyncingStage,
+        IDBDataStatus.NOOP
+      );
+    }
 
     if (response.responseCode === 'OK' && questionSetId && isInProgress) {
       yield put(navigateTo('/continue-journey'));

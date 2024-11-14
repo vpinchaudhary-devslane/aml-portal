@@ -6,33 +6,126 @@ import {
   syncLearnerResponseError,
 } from 'store/actions/syncLearnerResponse.action';
 import { syncLearnerResponseService } from 'services/api-services/syncLearnerResponse';
-import { localStorageService } from 'services/LocalStorageService';
+import _ from 'lodash';
+import { IDBDataStatus } from '../../types/enum';
+import { indexedDBService } from '../../services/IndexedDBService';
+import { LearnerJourneyStatus } from '../../models/enums/learnerJourney.enum';
+import { authLogoutAction } from '../actions/auth.action';
+import { toastService } from '../../services/ToastService';
 
 function* SyncLearnerResponseSaga({
   payload,
 }: StoreAction<SyncLearnerResponseActionType>): any {
+  const { learnerId, questionSetId, logoutOnSuccess } = payload;
+  const criteria = {
+    status: IDBDataStatus.NOOP,
+    learner_id: learnerId,
+    question_set_id: questionSetId,
+  };
+  const learnerResponseData = yield call(
+    indexedDBService.queryObjectsByKeys,
+    criteria
+  );
+
+  if (!learnerResponseData.length) {
+    console.log('No data for sync');
+    yield put(syncLearnerResponseCompleted());
+    if (logoutOnSuccess) {
+      yield put(authLogoutAction());
+    }
+    return;
+  }
+
+  if (logoutOnSuccess) {
+    toastService.showInfo('Saving progress');
+  }
+
+  const objIds = learnerResponseData.map((data: any) => data.id) as number[];
   try {
+    const learnerResponseDataQIDs = learnerResponseData.map(
+      (data: any) => data.question_id
+    ) as string[];
+
+    yield call(
+      indexedDBService.updateStatusByIds,
+      objIds,
+      IDBDataStatus.SYNCING
+    );
+
     const response = yield call(
       syncLearnerResponseService.syncLearnerResponse,
-      payload
+      {
+        learner_id: learnerId,
+        questions_data: learnerResponseData,
+      }
     );
+
     if (response?.responseCode === 'OK') {
-      // clearing local storage now as data sync completed
-      const tempKey = `${payload.learner_id}_temp`;
-      const originalKey = payload.learner_id;
-      localStorageService.deleteLearnerResponseData(originalKey);
-      yield put(syncLearnerResponseCompleted(response.result?.data?.message));
-      const learnerTempData =
-        localStorageService.getLearnerResponseData(tempKey);
-      if (learnerTempData) {
-        localStorageService.saveLearnerResponseData(
-          originalKey,
-          learnerTempData
+      const learnerJourney = response?.result?.data;
+      const {
+        status,
+        question_set_id: completedQuestionSetId,
+        completed_question_ids: completedQuestionIds,
+      } = learnerJourney;
+
+      const syncedIdentifiers = _.intersection(
+        learnerResponseDataQIDs,
+        completedQuestionIds
+      );
+      const syncedIds = learnerResponseData
+        .filter((data: any) => syncedIdentifiers.includes(data.question_id))
+        .map((data: any) => data.id);
+      // updating status of data entries
+      yield call(
+        indexedDBService.updateStatusByIds,
+        syncedIds,
+        IDBDataStatus.SYNCED
+      );
+
+      if (syncedIds.length !== objIds.length) {
+        const unsyncedIds = _.difference(objIds, syncedIds);
+        yield call(
+          indexedDBService.updateStatusByIds,
+          unsyncedIds,
+          IDBDataStatus.NOOP
         );
-        localStorageService.deleteLearnerResponseData(tempKey);
+      }
+
+      if (status === LearnerJourneyStatus.COMPLETED) {
+        /**
+         * Delete all entries of completed QS for loggedInUser
+         */
+        const hasLocalDataForOldQS = yield call(
+          indexedDBService.queryObjectsByKeys,
+          {
+            learner_id: learnerId,
+            question_set_id: completedQuestionSetId,
+            status: IDBDataStatus.SYNCED,
+          }
+        );
+
+        if (
+          hasLocalDataForOldQS.length &&
+          hasLocalDataForOldQS.length === completedQuestionIds.length
+        ) {
+          const ids = hasLocalDataForOldQS.map(
+            (data: any) => data.id
+          ) as number[];
+          yield call(indexedDBService.deleteObjectsByIds, ids);
+        }
+      }
+
+      yield put(syncLearnerResponseCompleted());
+      if (logoutOnSuccess) {
+        toastService.showInfo('Progress saved successfully.');
+        yield put(authLogoutAction());
       }
     }
   } catch (e: any) {
+    yield call(indexedDBService.updateStatusByIds, objIds, IDBDataStatus.NOOP);
+    if (logoutOnSuccess) {
+      toastService.showError('Progress could not be saved');
+    }
     yield put(
       syncLearnerResponseError(
         (e?.errors && e.errors[0]?.message) || e?.message

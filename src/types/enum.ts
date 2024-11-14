@@ -7,3 +7,9 @@ export enum RouteKey {
   QUESTIONS = 'questions',
   COMPLETED = 'completed',
 }
+
+export enum IDBDataStatus {
+  NOOP = 'noop',
+  SYNCING = 'syncing',
+  SYNCED = 'synced',
+}

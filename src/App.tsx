@@ -1,5 +1,5 @@
 import ENV_CONFIG from 'constant/env.config';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import store from 'store';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -19,6 +19,7 @@ import UnauthenticatedRouteHOC from './HOC/UnauthenticatedRoute';
 import Login from './views/login/Login';
 import AML404Component from './utils/components/AML404Component';
 import 'react-toastify/dist/ReactToastify.css';
+import { indexedDBService } from './services/IndexedDBService';
 
 Sentry.init({
   dsn: ENV_CONFIG.VITE_SENTRY_DSN,
@@ -28,49 +29,63 @@ Sentry.init({
   environment: ENV_CONFIG.APP_ENV,
 });
 
-const App: React.FC = () => (
-  <Provider store={store}>
-    <ToastContainer
-      hideProgressBar
-      pauseOnFocusLoss={false}
-      toastClassName='relative flex p-2 min-h-10 rounded-md justify-between overflow-hidden cursor-pointer font-medium'
-    />
-    <ErrorBoundary
-      FallbackComponent={ErrorFallbackComponent}
-      onError={(error, info) => {
-        Sentry.captureException(error); // Capture the error in Sentry
-        errorBoundaryHelper(error, info); // Your custom error handler
-      }}
-    >
-      <Suspense fallback={<Loader />}>
-        <BrowserRouter>
-          <NavigationHandler>
-            <RouteWrapper>
-              <Routes>
-                <Route path='/' element={<Layout />}>
-                  {LAYOUT_ROUTES.map((route) => (
+const App: React.FC = () => {
+  useEffect(() => {
+    // Initialize the IndexedDB when the app loads
+    indexedDBService
+      .initializeDB()
+      .then(() => {
+        console.log('IndexedDB initialized successfully');
+      })
+      .catch((error) => {
+        console.error('Failed to initialize IndexedDB:', error);
+      });
+  }, []);
+
+  return (
+    <Provider store={store}>
+      <ToastContainer
+        hideProgressBar
+        pauseOnFocusLoss={false}
+        toastClassName='relative flex p-2 min-h-10 rounded-md justify-between overflow-hidden cursor-pointer font-medium'
+      />
+      <ErrorBoundary
+        FallbackComponent={ErrorFallbackComponent}
+        onError={(error, info) => {
+          Sentry.captureException(error); // Capture the error in Sentry
+          errorBoundaryHelper(error, info); // Your custom error handler
+        }}
+      >
+        <Suspense fallback={<Loader />}>
+          <BrowserRouter>
+            <NavigationHandler>
+              <RouteWrapper>
+                <Routes>
+                  <Route path='/' element={<Layout />}>
+                    {LAYOUT_ROUTES.map((route) => (
+                      <Route
+                        path={route.path}
+                        key={route.key}
+                        Component={
+                          route.component &&
+                          AuthenticatedRouteHOC(route.component)
+                        }
+                      />
+                    ))}
                     <Route
-                      path={route.path}
-                      key={route.key}
-                      Component={
-                        route.component &&
-                        AuthenticatedRouteHOC(route.component)
-                      }
+                      path='/login'
+                      Component={UnauthenticatedRouteHOC(Login)}
                     />
-                  ))}
-                  <Route
-                    path='/login'
-                    Component={UnauthenticatedRouteHOC(Login)}
-                  />
-                  <Route path='*' Component={AML404Component} />
-                </Route>
-              </Routes>
-            </RouteWrapper>
-          </NavigationHandler>
-        </BrowserRouter>
-      </Suspense>
-    </ErrorBoundary>
-  </Provider>
-);
+                    <Route path='*' Component={AML404Component} />
+                  </Route>
+                </Routes>
+              </RouteWrapper>
+            </NavigationHandler>
+          </BrowserRouter>
+        </Suspense>
+      </ErrorBoundary>
+    </Provider>
+  );
+};
 
 export default App;
