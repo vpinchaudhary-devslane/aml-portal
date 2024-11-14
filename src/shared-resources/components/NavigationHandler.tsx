@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-useless-fragment */
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { navigationPathSelector } from 'store/selectors/navigation.selector';
 import { learnerIdSelector } from 'store/selectors/auth.selector';
@@ -29,6 +29,11 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
 
   const questionSet = useSelector(questionsSetSelector);
 
+  const intervalRef = useRef<any>(null);
+  const timeoutRef = useRef<any>(null);
+
+  const location = useLocation();
+
   useEffect(() => {
     if (navigationPath) {
       navigate(navigationPath); // Perform the navigation
@@ -44,29 +49,37 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
     }
   };
 
+  const clearCallBackQueue = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
   useEffect(() => {
-    // Declare a variable to hold the interval ID
-    let intervalId: any | null = null;
+    if (location.pathname.includes('login')) {
+      clearCallBackQueue();
+    }
+  }, [location]);
 
-    if (learnerId) {
-      intervalId = setTimeout(() => {
-        const repeatedSyncInterval = setInterval(
-          syncLearnerResponseData,
-          120000
-        );
+  useEffect(
+    () => () => {
+      clearCallBackQueue();
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (learnerId && questionSet) {
+      intervalRef.current = setTimeout(() => {
+        intervalRef.current = setInterval(syncLearnerResponseData, 120000);
         syncLearnerResponseData();
-
-        intervalId = repeatedSyncInterval;
       }, 120000);
     }
-
-    return () => {
-      if (intervalId) {
-        clearTimeout(intervalId);
-        clearInterval(intervalId);
-      }
-    };
-  }, [learnerId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [learnerId, questionSet]);
 
   return <>{children}</>; // Render the children
 };
