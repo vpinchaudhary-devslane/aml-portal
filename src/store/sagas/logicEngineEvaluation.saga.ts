@@ -7,6 +7,7 @@ import { navigateTo } from 'store/actions/navigation.action';
 import { fetchLogicEngineEvaluationError } from 'store/actions/logicEngineEvaluation.action';
 import { logicEngineEvalutionService } from 'services/api-services/logicEngineEvaluationService';
 import { indexedDBService } from '../../services/IndexedDBService';
+import { IDBDataStatus } from '../../types/enum';
 
 function* LogicEngineEvaluationFetchSaga({
   payload,
@@ -23,16 +24,48 @@ function* LogicEngineEvaluationFetchSaga({
     // yield put(fetchLogicEngineEvaluationCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
       const newQSID = response?.result?.data?.question_set_id;
-      const criteria = {
-        learner_id: learnerId,
-        question_set_id: newQSID,
-      };
+      const completedQuestionIds =
+        response.result?.data?.completed_question_ids || [];
 
-      const hasLocalData = yield call(
-        indexedDBService.queryObjectsByKeys,
-        criteria
+      const allLocalData = yield call(
+        indexedDBService.queryObjectsByKey,
+        'learner_id',
+        learnerId
       );
-      if (hasLocalData.length) {
+
+      const localDataForNewQSID = (allLocalData || []).filter(
+        (data: any) => data.question_set_id === newQSID
+      );
+
+      /**
+       * Clearing redundant data
+       */
+      if (localDataForNewQSID.length < allLocalData.length) {
+        const localDataIdsForOldQS = (allLocalData || [])
+          .filter((data: any) => data.question_set_id !== newQSID)
+          .map((data: any) => data.id);
+        yield call(indexedDBService.deleteObjectsByIds, localDataIdsForOldQS);
+      }
+
+      /**
+       * Reverse Sync
+       */
+      const idbUnsyncedDataIds = (localDataForNewQSID || [])
+        .filter(
+          (data: any) =>
+            data?.status === IDBDataStatus.SYNCING &&
+            completedQuestionIds.includes(data.question_id)
+        )
+        .map((data: any) => data.id);
+      if (idbUnsyncedDataIds.length > 0) {
+        yield call(
+          indexedDBService.updateStatusByIds,
+          idbUnsyncedDataIds,
+          IDBDataStatus.SYNCED
+        );
+      }
+
+      if (localDataForNewQSID.length) {
         yield put(navigateTo('/continue-journey'));
       } else if (goToInstructions) {
         yield put(navigateTo('/instructions'));
