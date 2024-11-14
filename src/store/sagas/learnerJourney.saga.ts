@@ -10,7 +10,8 @@ import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
 import { fetchLogicEngineEvaluation } from 'store/actions/logicEngineEvaluation.action';
 import { LearnerJourneyStatus } from 'models/enums/learnerJourney.enum';
-import { localStorageService } from 'services/LocalStorageService';
+import { IDBDataStatus } from '../../types/enum';
+import { indexedDBService } from '../../services/IndexedDBService';
 
 function* LearnerJourneyFetchSaga({
   payload,
@@ -23,8 +24,15 @@ function* LearnerJourneyFetchSaga({
     const questionSetId = response?.result?.data?.question_set_id;
     const isInProgress =
       response?.result?.data?.status === LearnerJourneyStatus.IN_PROGRESS;
-    const hasLearnerData =
-      !!localStorageService.getLearnerResponseData(payload);
+    const criteria = {
+      status: IDBDataStatus.NOOP,
+      learner_id: payload,
+    };
+    const learnerResponseData = yield call(
+      indexedDBService.queryObjectsByKeys,
+      criteria
+    );
+    const hasLearnerData = learnerResponseData.length > 0;
 
     if (response.responseCode === 'OK' && questionSetId && isInProgress) {
       yield put(navigateTo('/continue-journey'));

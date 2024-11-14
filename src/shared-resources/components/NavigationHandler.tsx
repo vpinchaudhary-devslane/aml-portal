@@ -6,6 +6,10 @@ import { navigationPathSelector } from 'store/selectors/navigation.selector';
 import { localStorageService } from 'services/LocalStorageService';
 import { learnerIdSelector } from 'store/selectors/auth.selector';
 import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
+import {
+  isIntermediateSyncInProgressSelector,
+  isSyncInProgressSelector,
+} from '../../store/selectors/syncResponseSelector';
 
 // Define props for NavigationHandler
 type NavigationHandlerProps = {
@@ -18,6 +22,10 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
   const learnerId = useSelector(learnerIdSelector);
 
   const navigationPath = useSelector(navigationPathSelector);
+  const isSyncing = useSelector(isSyncInProgressSelector);
+  const isIntermediateSyncing = useSelector(
+    isIntermediateSyncInProgressSelector
+  );
 
   useEffect(() => {
     if (navigationPath) {
@@ -32,16 +40,8 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
 
     // Function to sync learner response data
     const syncLearnerResponseData = () => {
-      const data =
-        localStorageService.getLearnerResponseData(String(learnerId)) || [];
-
-      if (data.length > 0) {
-        dispatch(
-          syncLearnerResponse({
-            learner_id: learnerId,
-            questions_data: data,
-          })
-        );
+      if (learnerId && !isSyncing && !isIntermediateSyncing) {
+        dispatch(syncLearnerResponse(learnerId));
       }
     };
 

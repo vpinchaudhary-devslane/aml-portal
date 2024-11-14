@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import ConfirmationDialog from 'shared-resources/components/CustomDialog/ConfirmationDialog';
-import { localStorageService } from 'services/LocalStorageService';
 import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
 import { AuthContext } from '../../context/AuthContext';
 import { authLogoutAction } from '../../store/actions/auth.action';
@@ -13,6 +12,10 @@ import {
 } from '../../store/selectors/auth.selector';
 import { webRoutes } from '../../utils/constants/webRoutes.constants';
 import Header from './Header';
+import {
+  isIntermediateSyncInProgressSelector,
+  isSyncInProgressSelector,
+} from '../../store/selectors/syncResponseSelector';
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +25,10 @@ const Layout: React.FC = () => {
   const isUserLoading = useSelector(isAuthLoadingSelector);
   const learnerId = useSelector(learnerIdSelector);
   const userSelector = useSelector(loggedInUserSelector);
+  const isSyncing = useSelector(isSyncInProgressSelector);
+  const isIntermediateSyncing = useSelector(
+    isIntermediateSyncInProgressSelector
+  );
 
   const [isDialogOpen, setDialogOpen] = useState(false);
 
@@ -33,23 +40,17 @@ const Layout: React.FC = () => {
 
   const syncLearnerResponseData = () => {
     if (learnerId) {
-      const data =
-        localStorageService.getLearnerResponseData(String(learnerId)) || [];
-
-      if (data.length > 0) {
-        dispatch(
-          syncLearnerResponse({
-            learner_id: learnerId,
-            questions_data: data,
-          })
-        );
-      }
+      dispatch(syncLearnerResponse(learnerId));
     }
   };
 
   const onLogout = () => {
-    syncLearnerResponseData();
-    dispatch(authLogoutAction());
+    if (!isSyncing && !isIntermediateSyncing) {
+      syncLearnerResponseData();
+      dispatch(authLogoutAction());
+    } else {
+      // TODO: Show toast: Sync in progress
+    }
   };
 
   const handleLogoutClick = () => {

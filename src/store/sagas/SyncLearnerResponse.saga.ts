@@ -6,31 +6,84 @@ import {
   syncLearnerResponseError,
 } from 'store/actions/syncLearnerResponse.action';
 import { syncLearnerResponseService } from 'services/api-services/syncLearnerResponse';
-import { localStorageService } from 'services/LocalStorageService';
+import { IDBDataStatus } from '../../types/enum';
+import { indexedDBService } from '../../services/IndexedDBService';
+import { LearnerJourneyStatus } from '../../models/enums/learnerJourney.enum';
 
 function* SyncLearnerResponseSaga({
   payload,
 }: StoreAction<SyncLearnerResponseActionType>): any {
   try {
+    const { learnerId } = payload;
+    const criteria = {
+      status: IDBDataStatus.NOOP,
+      learner_id: learnerId,
+    };
+    const learnerResponseData = yield call(
+      indexedDBService.queryObjectsByKeys,
+      criteria
+    );
+
+    if (!learnerResponseData.length) {
+      console.log('No data for sync');
+      return;
+    }
+
+    const objIds = learnerResponseData.map((data: any) => data.id) as number[];
+
+    yield call(
+      indexedDBService.updateStatusByIds,
+      objIds,
+      IDBDataStatus.SYNCING
+    );
+
     const response = yield call(
       syncLearnerResponseService.syncLearnerResponse,
-      payload
-    );
-    if (response?.responseCode === 'OK') {
-      // clearing local storage now as data sync completed
-      const tempKey = `${payload.learner_id}_temp`;
-      const originalKey = payload.learner_id;
-      localStorageService.deleteLearnerResponseData(originalKey);
-      yield put(syncLearnerResponseCompleted(response.result?.data?.message));
-      const learnerTempData =
-        localStorageService.getLearnerResponseData(tempKey);
-      if (learnerTempData) {
-        localStorageService.saveLearnerResponseData(
-          originalKey,
-          learnerTempData
-        );
-        localStorageService.deleteLearnerResponseData(tempKey);
+      {
+        learner_id: learnerId,
+        questions_data: learnerResponseData,
       }
+    );
+
+    if (response?.responseCode === 'OK') {
+      const learnerJourney = response?.result?.data;
+      // updating status of data entries
+      yield call(
+        indexedDBService.updateStatusByIds,
+        objIds,
+        IDBDataStatus.SYNCED
+      );
+
+      const {
+        status,
+        question_set_id: completedQuestionSetId,
+        completed_question_ids: completedQuestionIds,
+      } = learnerJourney;
+      if (status === LearnerJourneyStatus.COMPLETED) {
+        /**
+         * Delete all entries of completed QS for loggedInUser
+         */
+        const hasLocalDataForOldQS = yield call(
+          indexedDBService.queryObjectsByKeys,
+          {
+            learner_id: learnerId,
+            question_set_id: completedQuestionSetId,
+            status: IDBDataStatus.SYNCED,
+          }
+        );
+
+        if (
+          hasLocalDataForOldQS.length &&
+          hasLocalDataForOldQS.length === completedQuestionIds.length
+        ) {
+          const ids = hasLocalDataForOldQS.map(
+            (data: any) => data.id
+          ) as number[];
+          yield call(indexedDBService.deleteObjectsByIds, ids);
+        }
+      }
+
+      yield put(syncLearnerResponseCompleted(response.result?.data?.message));
     }
   } catch (e: any) {
     yield put(

@@ -1,13 +1,13 @@
 import { SyncLearnerResponseActionType } from './actions.constants';
 
-export const syncLearnerResponse = (data: any) => ({
+export const syncLearnerResponse = (learnerId: string) => ({
   type: SyncLearnerResponseActionType.SYNC_LEARNER_RESPONSE,
-  payload: data,
+  payload: { learnerId },
 });
 
-export const syncFinalLearnerResponse = (data: any) => ({
+export const syncFinalLearnerResponse = (learnerId: string) => ({
   type: SyncLearnerResponseActionType.SYNC_FINAL_LEARNER_RESPONSE,
-  payload: data,
+  payload: { learnerId },
 });
 
 export const syncLearnerResponseCompleted = (message: string) => ({

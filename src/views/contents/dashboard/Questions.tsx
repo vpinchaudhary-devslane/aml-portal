@@ -1,11 +1,10 @@
 /* eslint-disable no-nested-ternary */
 import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { localStorageService } from 'services/LocalStorageService';
 import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
 import Question from 'shared-resources/components/Question';
 import {
-  convertResponseToLearnerResponse,
+  convertSingleResponseToLearnerResponse,
   transformQuestions,
 } from 'shared-resources/utils/helpers';
 import { fetchLogicEngineEvaluation } from 'store/actions/logicEngineEvaluation.action';
@@ -20,13 +19,15 @@ import {
   isIntermediateSyncInProgressSelector,
   isSyncInProgressSelector,
 } from 'store/selectors/syncResponseSelector';
+import { indexedDBService } from '../../../services/IndexedDBService';
+import { IDBDataStatus } from '../../../types/enum';
 
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFormValid, setIsFormValid] = useState(false);
-  const [submittedAnswers, setSubmittedAnswers] = useState<any[]>([]);
   const [isCompleted, setIsCompleted] = useState(false); // State to track if the set is completed
+  const [waitingBeforeEvaluation, setWaitingBeforeEvaluation] = useState(false); // State to track if the set is completed
   const questionSet = useSelector(questionsSetSelector);
   const learnerId = useSelector(learnerIdSelector);
   const learnerJourney = useSelector(learnerJourneySelector);
@@ -39,49 +40,101 @@ const Questions: React.FC = () => {
   const { width, height } = useWindowSize();
 
   useEffect(() => {
-    if (questionSet?.questions) {
-      const { questions } = questionSet;
-      setIsCompleted(false);
-      if (questions) {
-        const transformedQuestions = transformQuestions(questions);
-        const savedResponses = localStorageService.getLearnerResponseData(
-          String(learnerId)
-        );
-        const localStorageAnsweredIds =
-          savedResponses?.map((response: any) => response.question_id) || [];
-        const apiAnsweredIds = learnerJourney?.completed_question_ids || [];
-        const combinedAnsweredIds = [
-          ...new Set([...apiAnsweredIds, ...localStorageAnsweredIds]),
-        ];
-
-        const allAnswered = transformedQuestions.every((question: any) =>
-          combinedAnsweredIds.includes(question.questionId)
-        );
-
-        if (allAnswered) {
-          setIsCompleted(true);
-        } else {
-          const firstUnansweredIndex = transformedQuestions.findIndex(
-            (question: any) =>
-              !combinedAnsweredIds.includes(question.questionId)
+    const makeInitialDecisions = async () => {
+      if (questionSet?.questions) {
+        const { questions: allQuestions } = questionSet;
+        setIsCompleted(false);
+        if (allQuestions) {
+          const transformedQuestions = transformQuestions(allQuestions);
+          const savedResponses = await indexedDBService.queryObjectsByKey(
+            'learner_id',
+            learnerId
           );
-          setQuestions(transformedQuestions);
-          setCurrentQuestionIndex(
-            firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
+          const localStorageAnsweredIds =
+            savedResponses?.map((response: any) => response.question_id) || [];
+          const apiAnsweredIds = learnerJourney?.completed_question_ids || [];
+          const combinedAnsweredIds = [
+            ...new Set([...apiAnsweredIds, ...localStorageAnsweredIds]),
+          ];
+
+          const allAnswered = transformedQuestions.every((question: any) =>
+            combinedAnsweredIds.includes(question.questionId)
           );
+
+          if (allAnswered) {
+            setIsCompleted(true);
+          } else {
+            const firstUnansweredIndex = transformedQuestions.findIndex(
+              (question: any) =>
+                !combinedAnsweredIds.includes(question.questionId)
+            );
+            setQuestions(transformedQuestions);
+            setCurrentQuestionIndex(
+              firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
+            );
+          }
         }
       }
-    }
-  }, [questionSet, learnerJourney]);
+    };
 
-  const handleNextClick = () => {
-    if (isCompleted && learnerId) {
+    makeInitialDecisions();
+  }, [questionSet, learnerJourney, learnerId]);
+
+  useEffect(() => {
+    const syncData = async () => {
+      if (learnerId && !isIntermediateSyncing && !isSyncing) {
+        dispatch(syncFinalLearnerResponse(learnerId));
+        setIsCompleted(true); // to be moved in store
+      }
+    };
+
+    if (questions.length > 0 && currentQuestionIndex === questions.length) {
+      syncData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex, learnerId, questions]);
+
+  const evaluateLearner = () => {
+    if (learnerId) {
       dispatch(
         fetchLogicEngineEvaluation({
           learnerId: String(learnerId),
           goToInstructions: true,
         })
       );
+    }
+  };
+
+  useEffect(() => {
+    /**
+     * handling the case when after completing the question set, some questions' data is not yet synced
+     * after syncing it, then only we call evaluate API
+     */
+    if (!isSyncing && isCompleted && waitingBeforeEvaluation) {
+      evaluateLearner();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingBeforeEvaluation, isSyncing, isCompleted, learnerId]);
+
+  const handleNextClick = async () => {
+    if (isCompleted && learnerId) {
+      const criteria = {
+        status: IDBDataStatus.NOOP,
+        learner_id: learnerId,
+      };
+      const learnerResponseData = (await indexedDBService.queryObjectsByKeys(
+        criteria
+      )) as any[];
+      if (learnerResponseData.length && !isIntermediateSyncing && !isSyncing) {
+        /**
+         * handling the case when after completing the question set, some questions' data is not yet synced
+         * so syncing it before calling evaluate API
+         */
+        setWaitingBeforeEvaluation(true);
+        dispatch(syncFinalLearnerResponse(learnerId));
+        return;
+      }
+      evaluateLearner();
     } else if (questions.length === currentQuestionIndex + 1) {
       if (questionRef.current) {
         questionRef.current.submitForm();
@@ -91,7 +144,7 @@ const Questions: React.FC = () => {
     }
   };
 
-  const handleQuestionSubmit = (gridData: any) => {
+  const handleQuestionSubmit = async (gridData: any) => {
     const currentTime = new Date().toISOString();
     const newAnswer = {
       topAnswer: gridData.topAnswer,
@@ -106,56 +159,51 @@ const Questions: React.FC = () => {
         currentQuestionIndex === questions.length - 1 ? currentTime : '',
     };
 
-    setSubmittedAnswers((prev) => {
-      const updatedAnswers = [newAnswer];
+    const filteredAnswer = {
+      questionId: newAnswer.questionId,
+      start_time: newAnswer.start_time,
+      end_time: newAnswer.end_time,
+      answers: Object.fromEntries(
+        Object.entries({
+          topAnswer: newAnswer.topAnswer,
+          resultAnswer: newAnswer.resultAnswer,
+          row1Answers: newAnswer?.row1Answers,
+          row2Answers: newAnswer?.row2Answers,
+          fibAnswer: newAnswer?.fibAnswer,
+          mcqAnswer: newAnswer?.mcqAnswer,
+        }).filter(([, value]) => value !== undefined)
+      ),
+    };
 
-      const filteredAnswers = updatedAnswers.map(
-        ({ questionId, start_time, end_time, ...answers }) => ({
-          questionId,
-          start_time,
-          end_time,
-          answers: Object.fromEntries(
-            Object.entries(answers).filter(([_, value]) => value !== undefined)
-          ),
-        })
-      );
+    const transformedAnswer = convertSingleResponseToLearnerResponse(
+      filteredAnswer,
+      questionSet!.identifier
+    );
 
-      if (questionSet) {
-        const payload = convertResponseToLearnerResponse(
-          filteredAnswers,
-          questionSet?.identifier
-        );
-        if (!!learnerId && payload.length) {
-          const keyName = isIntermediateSyncing
-            ? `${learnerId}_temp`
-            : learnerId;
-          console.log('MAKING ENTRY for key:', keyName);
-          localStorageService.saveLearnerResponseData(keyName, payload);
-        }
-      }
+    const criteria = {
+      question_id: filteredAnswer.questionId,
+      question_set_id: questionSet!.identifier,
+      learner_id: learnerId,
+    };
+    const entryExists = (await indexedDBService.queryObjectsByKeys(
+      criteria
+    )) as any[];
 
-      return updatedAnswers;
-    });
+    if (entryExists && entryExists.length) {
+      await indexedDBService.updateObjectById(entryExists[0].id, {
+        ...transformedAnswer,
+        learner_id: learnerId,
+        status: IDBDataStatus.NOOP,
+      });
+    } else {
+      await indexedDBService.addObject({
+        ...transformedAnswer,
+        learner_id: learnerId,
+        status: IDBDataStatus.NOOP,
+      });
+    }
 
     setCurrentQuestionIndex((prev) => prev + 1);
-
-    if (currentQuestionIndex === questions.length - 1) {
-      const learnerResponseData = localStorageService.getLearnerResponseData(
-        String(learnerId)
-      );
-      const learnerTempResponseData =
-        localStorageService.getLearnerResponseData(`${learnerId}_temp`);
-      dispatch(
-        syncFinalLearnerResponse({
-          learner_id: learnerId,
-          questions_data: [
-            ...(learnerResponseData || []),
-            ...(learnerTempResponseData || []),
-          ],
-        })
-      );
-      setIsCompleted(true); // to be moved in store
-    }
   };
 
   const currentQuestion = questions[currentQuestionIndex];

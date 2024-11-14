@@ -6,32 +6,40 @@ import { questionSetFetchAction } from 'store/actions/questionSet.actions';
 import { navigateTo } from 'store/actions/navigation.action';
 import { fetchLogicEngineEvaluationError } from 'store/actions/logicEngineEvaluation.action';
 import { logicEngineEvalutionService } from 'services/api-services/logicEngineEvaluationService';
-import { localStorageService } from 'services/LocalStorageService';
+import { indexedDBService } from '../../services/IndexedDBService';
 
 function* LogicEngineEvaluationFetchSaga({
   payload,
 }: StoreAction<LogicEngineActionType>): any {
   try {
+    const { learnerId, goToInstructions } = payload;
     const response = yield call(
       logicEngineEvalutionService.fetchLogicEngineEvaluation,
       {
-        learner_id: payload.learnerId,
+        learner_id: learnerId,
       }
     );
     // not needed
     // yield put(fetchLogicEngineEvaluationCompleted(response.result?.data));
     if (response?.result?.data?.question_set_id) {
-      const hasLocalData = localStorageService.getLearnerResponseData(
-        String(payload.learnerId)
+      const newQSID = response?.result?.data?.question_set_id;
+      const criteria = {
+        learner_id: learnerId,
+        question_set_id: newQSID,
+      };
+
+      const hasLocalData = yield call(
+        indexedDBService.queryObjectsByKeys,
+        criteria
       );
-      if (hasLocalData) {
+      if (hasLocalData.length) {
         yield put(navigateTo('/continue-journey'));
-      } else if (payload?.goToInstructions) {
+      } else if (goToInstructions) {
         yield put(navigateTo('/instructions'));
       } else {
         yield put(navigateTo('/welcome'));
       }
-      yield put(questionSetFetchAction(response.result.data.question_set_id));
+      yield put(questionSetFetchAction(newQSID));
     } else {
       yield put(navigateTo('/completed'));
     }
