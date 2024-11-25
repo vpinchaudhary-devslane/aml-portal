@@ -19,6 +19,11 @@ function* SyncLearnerResponseSaga({
 }: StoreAction<SyncLearnerResponseActionType>): any {
   const { learnerId, questionSetId, logoutOnSuccess, callLogicEngine } =
     payload;
+
+  const lsKey = `${questionSetId}__${Date.now()}`;
+
+  const dateTime = new Date().toDateString();
+
   const criteria = {
     status: IDBDataStatus.NOOP,
     learner_id: learnerId,
@@ -31,6 +36,7 @@ function* SyncLearnerResponseSaga({
 
   if (!learnerResponseData.length) {
     console.log('No data for sync');
+    localStorage.setItem(lsKey, 'NO DATA FOR SYNC');
     yield put(syncLearnerResponseCompleted());
     if (logoutOnSuccess) {
       yield put(authLogoutAction());
@@ -47,6 +53,11 @@ function* SyncLearnerResponseSaga({
     const learnerResponseDataQIDs = learnerResponseData.map(
       (data: any) => data.question_id
     ) as string[];
+
+    localStorage.setItem(
+      lsKey,
+      JSON.stringify({ payload: learnerResponseData, dateTime })
+    );
 
     yield call(
       indexedDBService.updateStatusByIds,
@@ -128,6 +139,10 @@ function* SyncLearnerResponseSaga({
       }
     }
   } catch (e: any) {
+    localStorage.setItem(
+      lsKey,
+      JSON.stringify({ payload: learnerResponseData, dateTime, error: e })
+    );
     yield call(indexedDBService.updateStatusByIds, objIds, IDBDataStatus.NOOP);
     if (logoutOnSuccess) {
       toastService.showError('Progress could not be saved');

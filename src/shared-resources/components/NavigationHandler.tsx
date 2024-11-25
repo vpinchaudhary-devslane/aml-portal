@@ -45,6 +45,15 @@ const NavigationHandler: React.FC<NavigationHandlerProps> = ({ children }) => {
   // Function to sync learner response data
   const syncLearnerResponseData = () => {
     if (learnerId && !isSyncing && !isIntermediateSyncing && questionSet) {
+      localStorage.setItem(
+        `${questionSet.identifier}_${Date.now()}`,
+        'STARTING INTERMEDIATE SYNC'
+      );
+      console.log(
+        `${
+          questionSet.identifier
+        }_${Date.now()} STARTING INTERMEDIATE SYNC ${new Date().toDateString()}`
+      );
       dispatch(syncLearnerResponse(learnerId, questionSet.identifier));
     }
   };
