@@ -43,6 +43,15 @@ const Layout: React.FC = () => {
 
   const syncLearnerResponseData = () => {
     if (learnerId && questionSet) {
+      localStorage.setItem(
+        `${questionSet.identifier}_${Date.now()}`,
+        'SYNCING ON LOGOUT'
+      );
+      console.log(
+        `${
+          questionSet.identifier
+        }_${Date.now()} SYNCING ON LOGOUT ${new Date().toDateString()}`
+      );
       dispatch(syncLearnerResponse(learnerId, questionSet.identifier, true));
     }
   };

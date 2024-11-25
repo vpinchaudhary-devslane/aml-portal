@@ -97,6 +97,15 @@ const Questions: React.FC = () => {
   useEffect(() => {
     const syncData = () => {
       if (learnerId && !isIntermediatelySyncing && !isSyncing && questionSet) {
+        localStorage.setItem(
+          `${questionSet.identifier}_${Date.now()}`,
+          'STARTING FINAL SYNC'
+        );
+        console.log(
+          `${
+            questionSet.identifier
+          }_${Date.now()} STARTING FINAL SYNC ${new Date().toDateString()}`
+        );
         dispatch(syncFinalLearnerResponse(learnerId, questionSet.identifier));
       }
     };
@@ -149,6 +158,15 @@ const Questions: React.FC = () => {
          * handling the case when after completing the question set, some questions' data is not yet synced
          * so syncing it before calling evaluate API
          */
+        localStorage.setItem(
+          `${questionSet.identifier}_${Date.now()}`,
+          'STARTING FINAL SYNC (FALLBACK)'
+        );
+        console.log(
+          `${
+            questionSet.identifier
+          }_${Date.now()} STARTING FINAL SYNC (FALLBACK) ${new Date().toDateString()}`
+        );
         dispatch(syncFinalLearnerResponse(learnerId, questionSet.identifier));
         setWaitingBeforeEvaluation(true);
         return;
