@@ -4,8 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import ConfirmationDialog from 'shared-resources/components/CustomDialog/ConfirmationDialog';
 import { syncLearnerResponse } from 'store/actions/syncLearnerResponse.action';
 import { allQuestionSetsCompletedSelector } from 'store/selectors/logicEngine.selector';
+import { useLanguage } from 'context/LanguageContext';
+import { getTranslatedString } from 'shared-resources/components/MultiLangText/MultiLangText';
+import { multiLangLabels } from 'utils/constants/multiLangLabels.constants';
+import { authLogoutAction } from 'store/actions/auth.action';
 import { AuthContext } from '../../context/AuthContext';
-import { authLogoutAction } from '../../store/actions/auth.action';
 import {
   isAuthLoadingSelector,
   learnerIdSelector,
@@ -24,6 +27,8 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+
+  const { language } = useLanguage();
 
   const isUserLoading = useSelector(isAuthLoadingSelector);
   const learnerId = useSelector(learnerIdSelector);
@@ -67,7 +72,10 @@ const Layout: React.FC = () => {
       syncLearnerResponseData();
     } else {
       toastService.showError(
-        'Sync in progress. Please try again in some time.'
+        getTranslatedString(
+          language,
+          multiLangLabels.sync_in_progress_please_try_again_in_some_time
+        )
       );
     }
   };
@@ -97,8 +105,11 @@ const Layout: React.FC = () => {
 
         <ConfirmationDialog
           open={isDialogOpen}
-          title='Logout?'
-          description='Your progress will be saved automatically'
+          title={`${getTranslatedString(language, multiLangLabels.logout)}?`}
+          description={getTranslatedString(
+            language,
+            multiLangLabels.your_progress_will_be_saved_automatically
+          )}
           onClose={handleCloseDialog}
           onConfirm={handleConfirmLogout}
         />

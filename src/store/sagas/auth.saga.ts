@@ -13,7 +13,10 @@ import {
   authLogoutCompletedAction,
 } from 'store/actions/auth.action';
 import { authService } from 'services/api-services/AuthService';
-import { localStorageService } from 'services/LocalStorageService';
+import {
+  CONTENT_LANG,
+  localStorageService,
+} from 'services/LocalStorageService';
 import { fetchLearnerJourney } from 'store/actions/learnerJourney.actions';
 import { navigateTo } from 'store/actions/navigation.action';
 import * as Sentry from '@sentry/react';
@@ -22,6 +25,9 @@ import {
   fetchCSRFTokenFailed,
 } from 'store/actions/csrfToken.action';
 import { toastService } from 'services/ToastService';
+import { getTranslatedString } from 'shared-resources/components/MultiLangText/MultiLangText';
+import { multiLangLabels } from 'utils/constants/multiLangLabels.constants';
+import { SupportedLanguages } from 'types/enum';
 
 interface LoginSagaPayloadType extends SagaPayloadType {
   payload: AuthLoginActionPayloadType;
@@ -36,7 +42,13 @@ function* loginSaga(data: LoginSagaPayloadType): any {
         //   username: response?.result?.data?.username,
         // });
       }
-      toastService.showSuccess('Logged In successfully');
+      const language =
+        (localStorageService.getLocalStorageValue(
+          CONTENT_LANG
+        ) as keyof typeof SupportedLanguages) ?? SupportedLanguages.en;
+      toastService.showSuccess(
+        getTranslatedString(language, multiLangLabels.logged_in_successfully)
+      );
       yield put(authLoginCompletedAction(response?.result?.data));
       yield put(fetchLearnerJourney(response?.result?.data?.identifier));
     }
@@ -82,11 +94,17 @@ function* logoutSaga(): any {
   try {
     const response = yield call(authService.logout);
     if (response) {
+      const language =
+        (localStorageService.getLocalStorageValue(
+          CONTENT_LANG
+        ) as keyof typeof SupportedLanguages) ?? SupportedLanguages.en;
       localStorageService.removeCSRFToken();
       yield put(navigateTo('/login'));
       yield put(authLogoutCompletedAction());
       // Sentry.setUser(null);
-      toastService.showSuccess('Logged out successfully');
+      toastService.showSuccess(
+        getTranslatedString(language, multiLangLabels.logged_out_successfully)
+      );
     }
   } catch (e: any) {
     localStorageService.removeCSRFToken();

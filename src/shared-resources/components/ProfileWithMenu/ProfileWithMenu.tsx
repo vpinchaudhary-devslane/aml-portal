@@ -5,13 +5,24 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import './ProfileWithMenu.scss';
 import { getUserInitials } from 'shared-resources/utils/helpers';
+import { SupportedLanguages } from 'types/enum';
+import { multiLangLabels } from 'utils/constants/multiLangLabels.constants';
+import ToggleSwitch from '../ToggleSwitch/ToggleSwitch';
+import MultiLangText from '../MultiLangText/MultiLangText';
 
 type Props = {
   onLogout?: () => void;
   username?: string;
+  handleLanguageChange: (_: any, checked: boolean) => void;
+  language: keyof typeof SupportedLanguages;
 };
 
-const ProfileWithMenu: React.FC<Props> = ({ onLogout, username }) => {
+const ProfileWithMenu: React.FC<Props> = ({
+  onLogout,
+  username,
+  handleLanguageChange,
+  language,
+}) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -56,7 +67,24 @@ const ProfileWithMenu: React.FC<Props> = ({ onLogout, username }) => {
             handleClose();
           }}
         >
-          Logout
+          <MultiLangText labelMap={multiLangLabels.logout} />
+        </MenuItem>
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <div className='gap-2 flex'>
+            English
+            <ToggleSwitch
+              checked={language === SupportedLanguages.kn}
+              onChange={handleLanguageChange}
+            />
+            <MultiLangText
+              labelMap={multiLangLabels.kannada}
+              enforceLang={SupportedLanguages.kn}
+            />
+          </div>
         </MenuItem>
       </Menu>
     </>

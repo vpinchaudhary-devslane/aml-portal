@@ -8,7 +8,13 @@ import {
 import { syncLearnerResponseService } from 'services/api-services/syncLearnerResponse';
 import _ from 'lodash';
 import { fetchLogicEngineEvaluation } from 'store/actions/logicEngineEvaluation.action';
-import { IDBDataStatus } from '../../types/enum';
+import { getTranslatedString } from 'shared-resources/components/MultiLangText/MultiLangText';
+import { multiLangLabels } from 'utils/constants/multiLangLabels.constants';
+import {
+  CONTENT_LANG,
+  localStorageService,
+} from 'services/LocalStorageService';
+import { IDBDataStatus, SupportedLanguages } from '../../types/enum';
 import { indexedDBService } from '../../services/IndexedDBService';
 import { LearnerJourneyStatus } from '../../models/enums/learnerJourney.enum';
 import { authLogoutAction } from '../actions/auth.action';
@@ -73,8 +79,15 @@ function* SyncLearnerResponseSaga({
     return;
   }
 
+  const language =
+    (localStorageService.getLocalStorageValue(
+      CONTENT_LANG
+    ) as keyof typeof SupportedLanguages) ?? SupportedLanguages.en;
+
   if (logoutOnSuccess) {
-    toastService.showInfo('Saving progress');
+    toastService.showInfo(
+      getTranslatedString(language, multiLangLabels.saving_progress)
+    );
   }
 
   const objIds = learnerResponseData.map((data: any) => data.id) as number[];
@@ -160,7 +173,12 @@ function* SyncLearnerResponseSaga({
 
       yield put(syncLearnerResponseCompleted());
       if (logoutOnSuccess) {
-        toastService.showInfo('Progress saved successfully.');
+        toastService.showInfo(
+          getTranslatedString(
+            language,
+            multiLangLabels.progress_saved_successfully
+          )
+        );
         yield put(authLogoutAction());
       }
     }
@@ -171,7 +189,9 @@ function* SyncLearnerResponseSaga({
     );
     yield call(indexedDBService.updateStatusByIds, objIds, IDBDataStatus.NOOP);
     if (logoutOnSuccess) {
-      toastService.showError('Progress could not be saved');
+      toastService.showError(
+        getTranslatedString(language, multiLangLabels.progress_could_not_saved)
+      );
     }
     yield put(
       syncLearnerResponseError(
