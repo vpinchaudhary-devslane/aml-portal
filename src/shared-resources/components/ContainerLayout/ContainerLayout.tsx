@@ -25,6 +25,7 @@ interface ContainerLayoutProps {
   currentQuestionIndex?: number;
   questionsLength?: number;
   showAttemptCount?: boolean;
+  ttsAvailable?: boolean;
 }
 
 const ContainerLayout: React.FC<ContainerLayoutProps> = ({
@@ -42,6 +43,7 @@ const ContainerLayout: React.FC<ContainerLayoutProps> = ({
   currentQuestionIndex = 0,
   questionsLength = 0,
   showAttemptCount,
+  ttsAvailable,
 }) => {
   const location = useLocation();
 
@@ -54,7 +56,7 @@ const ContainerLayout: React.FC<ContainerLayoutProps> = ({
           questionsLength={questionsLength}
         />
       )}
-      <QuestionHeader HeaderText={headerText} />
+      <QuestionHeader HeaderText={headerText} ttsAvailable={ttsAvailable} />
       <div className='flex flex-col md:flex-row gap-6 items-center md:items-end md:h-[80%] justify-start md:justify-between px-6 py-10 pl-0 max-h-full'>
         <div className='relative w-full h-[65%] md:h-full md:w-[65%] border border-black mt-6 flex flex-col items-center justify-center'>
           <div className='overflow-y-auto p-8 gap-6 md:gap-14 w-full flex flex-col items-center'>

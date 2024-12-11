@@ -341,6 +341,7 @@ const Questions: React.FC = () => {
         currentQuestion={currentQuestion}
         noKeyboard={isCompleted}
         taxonomy={questionSet?.taxonomy}
+        ttsAvailable
       />
     </>
   );
