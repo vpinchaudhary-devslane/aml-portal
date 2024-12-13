@@ -15,35 +15,20 @@ import {
   imageErrorSelector,
   isCurrentImageLoadingSelector,
 } from 'store/selectors/media.selector';
-import cx from 'classnames';
+
+import { ArithmaticOperations } from 'models/enums/ArithmaticOperations.enum';
 import {
-  ArithmaticOperations,
-  operationMap,
-} from 'models/enums/ArithmaticOperations.enum';
-import ToggleButtonGroup from './ToggleButtonGroup/ToggleButtonGroup';
+  FormValues,
+  QuestionPropsType,
+} from 'shared-resources/components/questionUtils';
 import Loader from './Loader/Loader';
-import MultiLangText from './MultiLangText/MultiLangText';
+import MCQQuestion from './MCQQuestion';
+import FIBQuestion from './FIBQuestion';
+import Grid2Question from './Grid2Question';
+import Grid1Question from './Grid1Question';
 
 interface QuestionProps {
-  question: {
-    answers: {
-      result: string;
-      isPrefil: boolean;
-      answerTop: string;
-      answerResult: string;
-      answerIntermediate: string;
-      isIntermediatePrefill?: boolean;
-    };
-    numbers: {
-      [key: string]: string;
-    };
-    questionType: QuestionType;
-    questionId: string;
-    options?: string[];
-    name?: { en: string };
-    operation: ArithmaticOperations;
-    questionImage?: string;
-  };
+  question: QuestionPropsType;
   onSubmit: (gridData: any) => void;
   onValidityChange: (validity: boolean) => void;
   keyPressed?: {
@@ -54,18 +39,6 @@ interface QuestionProps {
     isBackSpaced: boolean;
     counter: number;
   };
-}
-
-interface FormValues {
-  topAnswer: string[];
-  resultAnswer: string[];
-  row1Answers: string[];
-  row2Answers: string[];
-  questionType: QuestionType;
-  fibAnswer: string;
-  mcqAnswer: string;
-  questionId: string;
-  answerIntermediate: string[];
 }
 
 // Using forwardRef to forward refs to the parent component
@@ -125,28 +98,100 @@ const Question = forwardRef(
           }
           return value && value.length > 0; // Ensure the array has at least one valid entry
         }),
-      answerIntermediate: Yup.array()
-        .of(
-          Yup.string()
-            .required('Required')
-            .matches(/^\d$/, 'Must be a single digit')
-        )
-        .test(
-          'is-intermediate-required',
-          'Intermediate answer is required',
-          function (value) {
-            const { questionType, operation } = this.parent;
-            if (
-              questionType === 'Grid-1' &&
-              operation === 'Multiplication' &&
-              value
-            ) {
-              // Ensure all inputs are filled for Multiplication
-              return value.every((input) => input !== '');
-            }
-            return true; // Skip validation for other cases
-          }
-        ),
+
+      answerIntermediate: Yup.lazy(() => {
+        if (
+          question.operation === ArithmaticOperations.DIVISION &&
+          question.questionType === QuestionType.GRID_1
+        ) {
+          return Yup.array()
+            .of(
+              Yup.array().of(
+                Yup.string().test(
+                  'validate-b-and-hash',
+                  'Input must be a single digit',
+                  (value: any, context) => {
+                    if (!answers?.answerIntermediate?.length) {
+                      return true; // Validation passes without errors
+                    }
+                    const { answerIntermediate } = answers; // Access original string
+                    const parts = answerIntermediate?.split('|'); // Original input string split into rows
+                    const rowIndex = context.path.match(/\d+/g)?.[0]; // Get row index
+                    const colIndex = context.path.match(/\d+/g)?.[1]; // Get column index
+                    if (rowIndex === undefined || colIndex === undefined) {
+                      return true; // Skip validation if indices are missing
+                    }
+                    const originalChar = parts[+rowIndex]?.[+colIndex]; // Get the original character
+                    if (question.operation === ArithmaticOperations.DIVISION) {
+                      if (originalChar === 'B') {
+                        // "B" must be filled with a number
+                        return /^\d$/.test(value);
+                      }
+                      if (originalChar === '#') {
+                        // "#" can remain empty
+                        return value === '' || value === undefined;
+                      }
+                    }
+
+                    return true; // Skip validation for non-DIVISION cases
+                  }
+                )
+              )
+            )
+            .test(
+              'validate-row-has-inputs',
+              'Each row must have at least one filled input for DIVISION',
+              (value, context) => {
+                if (!answers?.answerIntermediate?.length) {
+                  return true; // Validation passes without errors
+                }
+                const { answerIntermediate } = answers || {};
+                const parts = answerIntermediate?.split('|'); // Original string split into rows
+                const rowIndex = context.path.match(/\d+/g)?.[0]; // Get row index
+                const colIndex = context.path.match(/\d+/g)?.[1]; // Get column index
+                if (rowIndex === undefined || colIndex === undefined) {
+                  return true; // Skip validation if indices are missing
+                }
+                const originalChar = parts[+rowIndex]?.[+colIndex]; // Get the original character
+                if (question.operation === ArithmaticOperations.DIVISION) {
+                  return value?.every((row) => {
+                    const hasValidInput = row?.some((input) => {
+                      const normalizedInput = input ?? ''; // Treating null/undefined as empty
+                      // Only validating cells marked as 'B' in the original string
+                      return (
+                        originalChar === 'B' &&
+                        !!normalizedInput &&
+                        /^\d$/.test(normalizedInput)
+                      );
+                    });
+
+                    return hasValidInput; // At least one valid input in the row
+                  });
+                }
+
+                return true; // Skip for non-DIVISION cases
+              }
+            );
+        }
+        if (
+          question.operation === ArithmaticOperations.MULTIPLICATION &&
+          question.questionType === QuestionType.GRID_1
+        ) {
+          return Yup.array().of(
+            Yup.string().test(
+              'validate-all-filled-for-multiplication',
+              'All inputs must be filled for MULTIPLICATION',
+              (value) => {
+                if (!answers?.isIntermediatePrefill) {
+                  return true; // Validation passes without errors
+                }
+                return !!value;
+              } // Check that each input is not empty
+            )
+          );
+        }
+        return Yup.mixed(); // Default validation (skipped) for other operations
+      }),
       resultAnswer: Yup.array()
         .of(
           Yup.string()
@@ -160,6 +205,7 @@ const Question = forwardRef(
             const { questionType } = this.parent;
             return (
               questionType !== QuestionType.GRID_1 ||
+              question.operation === ArithmaticOperations.DIVISION ||
               (value && value.length > 0)
             );
           }
@@ -206,10 +252,97 @@ const Question = forwardRef(
             if (value === '.') {
               return false; // Invalid if only a period
             }
-            if (questionType === QuestionType.FIB) {
+            if (
+              (questionType === QuestionType.FIB &&
+                question.operation !== ArithmaticOperations.DIVISION) ||
+              (questionType === QuestionType.FIB &&
+                question.operation === ArithmaticOperations.DIVISION &&
+                answers.fib_type === '1')
+            ) {
               return !!value; // Return true if value is provided (not null or empty)
             }
             return true; // Skip validation if not 'fib'
+          }
+        ),
+      answerQuotient: Yup.mixed()
+        .nullable()
+        .test(
+          'validate-answerQuotient',
+          'Invalid value in answerQuotient',
+          function (value) {
+            const { questionType } = this.parent;
+
+            // Validation for GRID_1
+            if (
+              questionType === QuestionType.GRID_1 &&
+              question.operation === ArithmaticOperations.DIVISION
+            ) {
+              if (Array.isArray(value)) {
+                // Ensuring all elements in the array are valid
+                return value.every(
+                  (val) => val !== null && val !== '' && /^\d$/.test(val) // Must be a single digit
+                );
+              }
+              return false; // Invalid if not an array
+            }
+
+            // Validation for other types (e.g., FIB)
+            if (
+              questionType === QuestionType.FIB &&
+              question.operation === ArithmaticOperations.DIVISION &&
+              answers.fib_type === '2'
+            ) {
+              if (typeof value === 'string') {
+                return value !== null && value !== '' && value !== '.'; // Must not be empty or invalid
+              }
+              return false; // Invalid if not a string
+            }
+
+            return true; // Skip validation for other question types
+          }
+        ),
+
+      answerRemainder: Yup.mixed()
+        .nullable()
+        .test(
+          'validate-answerRemainder',
+          'Invalid value in answerRemainder',
+          function (value) {
+            const { questionType } = this.parent;
+
+            // Validation for GRID_1
+            if (
+              questionType === QuestionType.GRID_1 &&
+              question.operation === ArithmaticOperations.DIVISION
+            ) {
+              if (Array.isArray(value)) {
+                return value.every((val, idx) => {
+                  const initialValue = answers?.answerRemainder?.[idx]; // Corresponding initial character
+                  if (initialValue === '#') {
+                    return true; // '#' is always valid
+                  }
+                  if (initialValue === 'B') {
+                    return val !== '' && /^\d$/.test(val); // Must be a single digit, cannot be empty
+                  }
+                  return /^\d$/.test(val); // For numbers, must be a single digit
+                });
+              }
+              return false;
+            }
+
+            // Validation for other types (e.g., FIB)
+            if (
+              questionType === QuestionType.FIB &&
+              question.operation === ArithmaticOperations.DIVISION &&
+              answers.fib_type === '2'
+            ) {
+              if (typeof value === 'string') {
+                return value !== null && value !== '' && value !== '.'; // Must not be empty or invalid
+              }
+              return false; // Invalid if not a string
+            }
+
+            return true; // Skip validation for other question types
           }
         ),
       mcqAnswer: Yup.string()
@@ -253,11 +386,37 @@ const Question = forwardRef(
         resultAnswer: answers?.answerResult
           ?.split('')
           ?.map((val) => (val === 'B' ? '' : val)),
-        answerIntermediate: answers?.answerIntermediate
-          ?.split('#') // Split into rows
-          .flatMap(
-            (row) => row.split('').map((val) => (val === 'B' ? '' : val)) // Map each character, ignoring `B`
-          ),
+        answerIntermediate:
+          question.operation === ArithmaticOperations.DIVISION
+            ? answers?.answerIntermediate
+                ?.split('|')
+                .map((row) =>
+                  row
+                    .split('')
+                    .map((val) => (val === 'B' || val === '#' ? '' : val))
+                )
+            : answers?.answerIntermediate
+                ?.split('#') // Split into rows for non-DIVISION operations
+                .flatMap((row) =>
+                  row
+                    .split('')
+                    .map((val) => (val === 'B' || val === '#' ? '' : val))
+                ),
+
+        answerQuotient:
+          question.questionType === QuestionType.GRID_1 &&
+          question.operation === ArithmaticOperations.DIVISION
+            ? answers?.answerQuotient
+                ?.split('')
+                ?.map((val) => (val === 'B' ? '' : val))
+            : '',
+        answerRemainder:
+          question.questionType === QuestionType.GRID_1 &&
+          question.operation === ArithmaticOperations.DIVISION
+            ? answers?.answerRemainder
+                ?.split('')
+                ?.map((val) => (val === 'B' ? '' : val))
+            : '',
         row1Answers: Array(maxLength).fill(''),
         row2Answers: Array(maxLength).fill(''),
         questionType: question.questionType,
@@ -274,6 +433,8 @@ const Question = forwardRef(
             questionId: question.questionId,
             topAnswer: values.topAnswer,
             resultAnswer: values.resultAnswer,
+            answerQuotient: values.answerQuotient,
+            answerRemainder: values.answerRemainder,
             operation: question.operation,
             answerIntermediate: values?.answerIntermediate,
           });
@@ -286,12 +447,15 @@ const Question = forwardRef(
         } else if (question.questionType === QuestionType.FIB) {
           onSubmit({
             questionId: question.questionId,
-            fibAnswer: values.fibAnswer, // Pass the FIB answer
+            fibAnswer: values.fibAnswer,
+            answerQuotient: values.answerQuotient,
+            answerRemainder: values.answerRemainder,
+            operation: question.operation,
           });
         } else if (question.questionType === QuestionType.MCQ) {
           onSubmit({
             questionId: question.questionId,
-            mcqAnswer: values.mcqAnswer, // Pass the FIB answer
+            mcqAnswer: values.mcqAnswer,
           });
         }
         // Reset the form
@@ -299,17 +463,24 @@ const Question = forwardRef(
         formik.resetForm();
       },
     });
-
     const handleSetFieldValue = (
       _activeField: keyof FormValues,
       value?: string
     ) => {
-      const activeFieldPath = _activeField.split('.'); // example: if _activeField is 'topAnswers.0, then fullActiveFieldPath is 'topAnswers[0]'
-      const fullActiveFieldPath =
-        `${activeFieldPath?.[0]}` + '[' + `${[activeFieldPath?.[1]]}` + ']'; // eslint-disable-line no-useless-concat
-      if (activeFieldPath.length === 1)
+      const activeFieldPath = _activeField.split('.'); // Spliting the field path by '.'
+
+      // Dynamically constructing the full field path based on the depth
+      const fullActiveFieldPath = activeFieldPath
+        .map((segment, index) => (index === 0 ? segment : `[${segment}]`))
+        .join(''); // Joining the segments to form the full path
+
+      if (activeFieldPath.length === 1) {
+        // For single-level fields, using the field name directly
         formik.setFieldValue(_activeField, value);
-      else formik.setFieldValue(fullActiveFieldPath, value);
+      } else {
+        // For nested fields, using the constructed path
+        formik.setFieldValue(fullActiveFieldPath, value);
+      }
     };
 
     const separateKeys = (input: string) => {
@@ -319,7 +490,6 @@ const Question = forwardRef(
 
     useEffect(() => {
       if (!keyPressed || !backSpacePressed || !activeField) return;
-
       const isKeyPressed = keyPressed.key !== '';
       const { isBackSpaced } = backSpacePressed;
       const { mainKey, subKey } = separateKeys(activeField);
@@ -404,7 +574,6 @@ const Question = forwardRef(
         setImgError(true);
       }
     }, [imageError]);
-
     return isLoading ? (
       <Loader />
     ) : (
@@ -413,438 +582,41 @@ const Question = forwardRef(
         className='flex flex-col space-y-4 items-start'
       >
         {question.questionType === QuestionType.GRID_1 && (
-          <>
-            {/* Top labels */}
-            <div className='flex justify-center self-end'>
-              {['U', 'T', 'H', 'Th', 'TTh', 'L']
-                .slice(0, String(question.answers?.result)?.length || 1)
-                .reverse()
-                .map((label, index) => (
-                  <div
-                    key={index}
-                    className='w-[46px] mr-[.35rem] p-2 text-[#A5A5A5] text-center flex items-center justify-center font-bold text-[20px]'
-                  >
-                    {label}
-                  </div>
-                ))}
-            </div>
-
-            {/* Top answer inputs */}
-            {answers?.isPrefil && (
-              <div className='flex justify-end space-x-2 self-end'>
-                {formik.values?.topAnswer?.map((char, index) => (
-                  <div key={`top-${index}`}>
-                    {char === '#' ? (
-                      <div className='w-[46px] h-[61px]' /> // Render blank space
-                    ) : (
-                      <input
-                        type='text'
-                        name={`topAnswer.${index}`}
-                        onFocus={() =>
-                          setActiveField(
-                            `topAnswer.${index}` as keyof FormValues
-                          )
-                        }
-                        autoComplete='off'
-                        value={char}
-                        onChange={formik.handleChange}
-                        maxLength={
-                          question.operation ===
-                          ArithmaticOperations.SUBTRACTION
-                            ? 2
-                            : 1
-                        } // Allow multiple digits for subtraction
-                        className={cx(
-                          'border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold  focus:outline-none focus:border-primary',
-                          question.operation ===
-                            ArithmaticOperations.SUBTRACTION
-                            ? 'text-[24px]'
-                            : 'text-[36px]'
-                        )}
-                        onKeyPress={(e) => {
-                          if (!/[0-9]/.test(e.key)) e.preventDefault(); // Only allow numbers
-                        }}
-                        onPaste={(e) => {
-                          const pasteData = e.clipboardData.getData('text');
-                          if (!/^[0-9]*$/.test(pasteData)) {
-                            e.preventDefault(); // Prevent paste if it contains non-numeric characters
-                          }
-                        }}
-                        disabled={
-                          (question.operation ===
-                            ArithmaticOperations.ADDITION &&
-                            (answers.answerTop[index] || '') !== '' &&
-                            (answers.answerTop[index] || '') !== 'B' &&
-                            char === (answers.answerTop[index] || '')) ||
-                          (answers.answerTop.split('|')[index] !== '' &&
-                            answers.answerTop.split('|')[index] !== 'B' &&
-                            char === answers.answerTop.split('|')[index])
-                        }
-                        // Disable if it matches the initial value
-                      />
-                    )}
-
-                    {Array.isArray(formik.touched.topAnswer) &&
-                      Array.isArray(formik.errors.topAnswer) &&
-                      formik.touched.topAnswer[index] &&
-                      formik.errors.topAnswer[index] && (
-                        <div className='text-red-500 text-xs'>
-                          {formik.errors.topAnswer[index]}
-                        </div>
-                      )}
-                  </div>
-                ))}
-                {question.operation === ArithmaticOperations.ADDITION && (
-                  <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]' />
-                )}
-              </div>
-            )}
-            {/* Numbers */}
-            <div className='flex flex-col space-y-2 self-end'>
-              {Object.keys(numbers).map((key, idx) => (
-                <div key={key} className='flex justify-end space-x-2'>
-                  {numbers[key].split('').map((digit, index) => (
-                    <div
-                      key={index}
-                      className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px] relative'
-                    >
-                      {digit}
-                      {question.operation ===
-                        ArithmaticOperations.SUBTRACTION &&
-                        !!answers.isPrefil &&
-                        idx === 0 &&
-                        formik.values.topAnswer?.[index] !== '#' && (
-                          <div className='absolute inset-0'>
-                            <div className='absolute w-full h-0 border-t-4 border-dotted border-red-700 rotate-45 top-1/2 -translate-y-1/2' />
-                          </div>
-                        )}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            {/* Separator */}
-            <div className='w-full relative'>
-              <span className='absolute bottom-4 left-4'>
-                {operationMap[question.operation]}
-              </span>
-              <hr className='w-full text-black border border-black' />
-            </div>
-
-            {/* Intermediate Inputs (Only for Multiplication) */}
-            {question.operation === ArithmaticOperations.MULTIPLICATION &&
-              answers?.isIntermediatePrefill &&
-              !!answers?.answerIntermediate && (
-                <div className='flex flex-col space-y-2 self-end'>
-                  {answers?.answerIntermediate
-                    .split('#')
-                    .map((row, rowIndex) => (
-                      <div
-                        key={`row-${rowIndex}`}
-                        className='flex justify-end space-x-2'
-                      >
-                        {row.split('').map((char, index) => {
-                          // Calculate the flat index for the flattened structure
-                          const flatIndex =
-                            answers?.answerIntermediate
-                              .split('#')
-                              .slice(0, rowIndex) // Get rows before the current row
-                              .reduce((acc, r) => acc + r.length, 0) + index; // Sum lengths + current index
-
-                          return (
-                            <input
-                              key={`intermediate-${rowIndex}-${index}`}
-                              type='text'
-                              name={`answerIntermediate.${flatIndex}`}
-                              onFocus={() =>
-                                setActiveField(
-                                  `answerIntermediate.${flatIndex}` as keyof FormValues
-                                )
-                              }
-                              value={
-                                formik.values?.answerIntermediate?.[flatIndex]
-                              }
-                              autoComplete='off'
-                              onChange={formik.handleChange}
-                              maxLength={1}
-                              className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
-                              disabled={char !== 'B' && char !== ''}
-                              onKeyPress={(e) => {
-                                if (!/[0-9]/.test(e.key)) e.preventDefault();
-                              }}
-                              onPaste={(e) => {
-                                const pasteData =
-                                  e.clipboardData.getData('text');
-                                if (!/^[0-9]*$/.test(pasteData)) {
-                                  e.preventDefault(); // Prevent paste if it contains non-numeric characters
-                                }
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
-                </div>
-              )}
-
-            {/* Separator */}
-            {answers?.isIntermediatePrefill && (
-              <div className='w-full relative'>
-                <span className='absolute bottom-4 left-4'>
-                  {operationMap[ArithmaticOperations.ADDITION]}
-                </span>
-                <hr className='w-full text-black border border-black' />
-              </div>
-            )}
-            {/* Result answer inputs */}
-            <div className='flex space-x-2'>
-              {Array(
-                maxLength - formik.values?.resultAnswer?.length > 0
-                  ? maxLength - formik.values?.resultAnswer?.length
-                  : 0
-              )
-                .fill(null)
-                .map((_, i) => (
-                  <div
-                    key={`extra-space-${i}`}
-                    className='w-[40px] h-[61px] border-transparent'
-                  />
-                ))}
-              <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]' />
-              {formik.values?.resultAnswer?.map((value, index) => (
-                <div key={`result-${index}`}>
-                  <input
-                    type='text'
-                    name={`resultAnswer.${index}`}
-                    onFocus={() =>
-                      setActiveField(
-                        `resultAnswer.${index}` as keyof FormValues
-                      )
-                    }
-                    autoFocus
-                    autoComplete='off'
-                    value={formik.values?.resultAnswer?.[index]}
-                    onChange={formik.handleChange}
-                    maxLength={1}
-                    className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
-                    onKeyPress={(e) => {
-                      if (!/[0-9]/.test(e.key)) e.preventDefault();
-                    }}
-                    onPaste={(e) => {
-                      const pasteData = e.clipboardData.getData('text');
-                      if (!/^[0-9]*$/.test(pasteData)) {
-                        e.preventDefault(); // Prevent paste if it contains non-numeric characters
-                      }
-                    }}
-                    disabled={
-                      (answers.answerResult[index] || '') !== '' &&
-                      (answers.answerResult[index] || '') !== 'B' &&
-                      value === (answers.answerResult[index] || '')
-                    } // Disable if it matches the initial value
-                  />
-                  {Array.isArray(formik.touched.resultAnswer) &&
-                    Array.isArray(formik.errors.resultAnswer) &&
-                    formik.touched.resultAnswer[index] &&
-                    formik.errors.resultAnswer[index] && (
-                      <div className='text-red-500 text-xs'>
-                        {formik.errors.resultAnswer[index]}
-                      </div>
-                    )}
-                </div>
-              ))}
-            </div>
-          </>
+          <Grid1Question
+            formik={formik}
+            maxLength={maxLength}
+            question={question}
+            setActiveField={setActiveField}
+          />
         )}
 
         {question.questionType === QuestionType.GRID_2 && (
-          <>
-            <div className='flex justify-center'>
-              <div className='w-[75px] p-4  border border-gray-900 flex items-center justify-center font-bold text-[36px]'>
-                {' '}
-              </div>
-              {Array.from({ length: maxLength }).map((_, index) => (
-                <div
-                  key={index}
-                  className='w-[80px] h-[95px] p-4 border text-[#A5A5A5] border-gray-900 flex items-center justify-center font-bold text-[24px]'
-                >
-                  {['U', 'T', 'H', 'Th', 'TTh'][maxLength - 1 - index] || ''}
-                </div>
-              ))}
-            </div>
-            <div className='flex flex-col !mt-0'>
-              <div className='flex'>
-                <div className='w-[75px] p-4 border border-gray-900 flex items-center justify-center font-bold text-[36px]'>
-                  {' '}
-                </div>
-                {formik.values?.row1Answers?.map((value, index) => (
-                  <div
-                    key={`row-1-${index}`}
-                    className='border border-gray-900 p-4'
-                  >
-                    {' '}
-                    <input
-                      key={`row1-${index}`}
-                      type='text'
-                      name={`row1Answers.${index}`}
-                      onFocus={() =>
-                        setActiveField(
-                          `row1Answers.${index}` as keyof FormValues
-                        )
-                      }
-                      autoFocus={index === 0}
-                      autoComplete='off'
-                      value={formik.values?.row1Answers?.[index]}
-                      onChange={formik.handleChange}
-                      maxLength={1}
-                      className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
-                      onKeyPress={(e) => {
-                        if (!/[0-9]/.test(e.key)) e.preventDefault();
-                      }}
-                      onPaste={(e) => {
-                        const pasteData = e.clipboardData.getData('text');
-                        if (!/^[0-9]*$/.test(pasteData)) {
-                          e.preventDefault(); // Prevent paste if it contains non-numeric characters
-                        }
-                      }}
-                    />
-                    {Array.isArray(formik.touched.row1Answers) &&
-                      Array.isArray(formik.errors.row1Answers) &&
-                      formik.touched.row1Answers[index] &&
-                      formik.errors.row1Answers[index] && (
-                        <div className='text-red-500 text-xs'>
-                          {formik.errors.row1Answers[index]}
-                        </div>
-                      )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Row 2 Inputs */}
-              <div className='flex'>
-                <div className='w-[75px] border border-gray-900 p-4 flex items-center justify-center font-bold text-[36px]'>
-                  {operationMap[question.operation]}
-                </div>
-                {formik.values?.row2Answers?.map((value, index) => (
-                  <div
-                    key={`row-2-${index}`}
-                    className='border border-gray-900 p-4'
-                  >
-                    <input
-                      key={`row2-${index}`}
-                      type='text'
-                      name={`row2Answers.${index}`}
-                      onFocus={() =>
-                        setActiveField(
-                          `row2Answers.${index}` as keyof FormValues
-                        )
-                      }
-                      value={formik.values?.row2Answers?.[index]}
-                      onChange={formik.handleChange}
-                      autoComplete='off'
-                      maxLength={1}
-                      className='border-2 border-gray-900 rounded-[10px] p-2 w-[46px] h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
-                      onKeyPress={(e) => {
-                        if (!/[0-9]/.test(e.key)) e.preventDefault();
-                      }}
-                      onPaste={(e) => {
-                        const pasteData = e.clipboardData.getData('text');
-                        if (!/^[0-9]*$/.test(pasteData)) {
-                          e.preventDefault(); // Prevent paste if it contains non-numeric characters
-                        }
-                      }}
-                    />
-                    {Array.isArray(formik.touched.row2Answers) &&
-                      Array.isArray(formik.errors.row2Answers) &&
-                      formik.touched.row2Answers[index] &&
-                      formik.errors.row2Answers[index] && (
-                        <div className='text-red-500 text-xs'>
-                          {formik.errors.row2Answers[index]}
-                        </div>
-                      )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
+          <Grid2Question
+            formik={formik}
+            maxLength={maxLength}
+            question={question}
+            setActiveField={setActiveField}
+          />
         )}
 
         {question.questionType === QuestionType.FIB && (
-          <div className='flex flex-row items-center justify-center relative'>
-            <p className='text-4xl flex flex-row font-semibold text-headingTextColor ml-[60px] pt-[23px] pb-[22px] px-[7px]'>
-              {Object.values(question?.numbers || {}).join(
-                operationMap[question.operation]
-              )}
-              =
-            </p>
-            <div className='flex flex-col space-y-2 w-[236px]'>
-              <input
-                type='text'
-                name='fibAnswer'
-                onFocus={() => setActiveField(`fibAnswer`)}
-                autoFocus
-                autoComplete='off'
-                value={formik.values.fibAnswer}
-                onChange={formik.handleChange}
-                maxLength={9}
-                onKeyPress={(e) => {
-                  // Prevent non-numeric key presses
-                  if (!/[0-9]/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                onPaste={(e) => {
-                  const pasteData = e.clipboardData.getData('text');
-                  if (!/^[0-9]*$/.test(pasteData)) {
-                    e.preventDefault(); // Prevent paste if it contains non-numeric characters
-                  }
-                }}
-                className='border-2 border-gray-900 rounded-[10px] p-2 w-full h-[61px] text-center font-bold text-[36px] focus:outline-none focus:border-primary'
-              />
-              {formik.touched.fibAnswer && formik.errors.fibAnswer && (
-                <div className='text-red-500 text-xs absolute -bottom-2'>
-                  {formik.errors.fibAnswer}
-                </div>
-              )}
-            </div>
-          </div>
+          <FIBQuestion
+            formik={formik}
+            question={question}
+            setActiveField={setActiveField}
+          />
         )}
 
-        {question.questionType === QuestionType.MCQ && !!question.options && (
-          <div className='flex flex-col space-y-2 justify-center items-center'>
-            <MultiLangText
-              labelMap={question?.name}
-              component='span'
-              className='mb-6'
-            />
-            {question?.questionImage && imgLoading && !imgError && <Loader />}
-            {question?.questionImage && !!imgURL && !imgError ? (
-              <img
-                key={imgURL}
-                className='w-auto min-w-[30%] max-w-full h-auto max-h-[80vh] !mb-6 object-contain'
-                src={imgURL}
-                onLoad={handleImageLoad}
-                onError={() => setImgError(true)}
-                alt='Img'
-              />
-            ) : (
-              imgError && (
-                <div className='text-red-500 text-lg pb-10 mt-0'>
-                  Connectivity Error!! Unable to load the image.
-                </div>
-              )
-            )}
-            <ToggleButtonGroup
-              selectedValue={formik.values.mcqAnswer}
-              setSelectedValue={(val) => formik.setFieldValue('mcqAnswer', val)}
-              options={question.options}
-            />
-            {formik.touched.mcqAnswer && formik.errors.mcqAnswer && (
-              <div className='text-red-500 text-xs'>
-                {formik.errors.mcqAnswer}
-              </div>
-            )}
-          </div>
+        {question.questionType === QuestionType.MCQ && (
+          <MCQQuestion
+            formik={formik}
+            handleImageLoad={handleImageLoad}
+            imgError={imgError}
+            imgLoading={imgLoading}
+            imgURL={imgURL}
+            question={question}
+            setImgError={setImgError}
+          />
         )}
       </form>
     );
