@@ -17,6 +17,9 @@ import Grid1DivisionQuestion from './Grid1DivisionQuestion';
 import AmlInput from './AmlInput';
 
 interface Grid1QuestionProps {
+  errors: {
+    [key: string]: boolean[] | boolean[][];
+  };
   question: QuestionPropsType;
   maxLength: number;
   formik: FormikProps<FormValues>;
@@ -28,6 +31,7 @@ const Grid1Question = ({
   formik,
   setActiveField,
   maxLength,
+  errors,
 }: Grid1QuestionProps) => {
   const { answers, numbers } = question;
 
@@ -109,6 +113,9 @@ const Grid1Question = ({
                 question.operation === ArithmaticOperations.SUBTRACTION ? 2 : 1
               } // Allow multiple digits for subtraction
               className={cx(
+                errors.topAnswer &&
+                  errors.topAnswer[index] &&
+                  '!text-red-500 !border-red-500 !focus:border-red-500',
                 question.operation === ArithmaticOperations.SUBTRACTION
                   ? '!text-[24px]'
                   : 'text-[36px]'
@@ -182,6 +189,13 @@ const Grid1Question = ({
                   value={formik.values?.answerIntermediate?.[flatIndex]}
                   onChange={formik.handleChange}
                   disabled={isIntermediateInputDisabled(char)}
+                  className={
+                    errors.answerIntermediate &&
+                    errors.answerIntermediate[rowIndex] &&
+                    (errors.answerIntermediate[rowIndex] as boolean[])[index]
+                      ? '!text-red-500 !border-red-500 !focus:border-red-500'
+                      : ''
+                  }
                 />
               );
             })}
@@ -206,6 +220,11 @@ const Grid1Question = ({
             value={formik.values?.resultAnswer?.[index]}
             onChange={formik.handleChange}
             disabled={isResultAnswerDisabled(value, index)}
+            className={
+              errors.resultAnswer && errors.resultAnswer[index]
+                ? '!text-red-500 !border-red-500 !focus:border-red-500'
+                : ''
+            }
           />
         </div>
       ))}
@@ -216,6 +235,7 @@ const Grid1Question = ({
     <>
       {shouldRenderDivisionGrid1 && (
         <Grid1DivisionQuestion
+          errors={errors}
           formik={formik}
           question={question}
           setActiveField={setActiveField}

@@ -14,3 +14,29 @@ body {
     height: 100vh;
   }
 }
+
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes spinOnce {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+
+@keyframes borderFadeIn {
+  0% {
+    box-shadow: 0 0 0 1px black;
+  }
+  100% {
+    box-shadow: 0 0 0 4px green;
+  }
+}

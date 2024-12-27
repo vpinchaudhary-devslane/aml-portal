@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { ArithmaticOperations } from 'models/enums/ArithmaticOperations.enum';
-import { QuestionType } from 'models/enums/QuestionType.enum';
+import { FibType, QuestionType } from 'models/enums/QuestionType.enum';
+import { QuestionPropsType } from 'shared-resources/components/questionUtils';
 
-type LearnerResponse = {
+export type LearnerResponse = {
   result?: string;
   quotient?: string;
   remainder?: string;
@@ -88,6 +89,12 @@ export const transformQuestions = (apiQuestions: any): any =>
     const questionImageUrl = question_body?.question_image_url
       ? question_body.question_image_url
       : undefined;
+
+    const correctOption = question_body?.correct_option?.replace(/Option /, '');
+    const correctOptionIndex = Number.isFinite(parseInt(correctOption, 10))
+      ? parseInt(correctOption, 10) - 1
+      : 0;
+
     return {
       questionId: identifier, // Assigning identifier as questionId
       questionType: question_type, // Adding questionType from the API
@@ -97,7 +104,7 @@ export const transformQuestions = (apiQuestions: any): any =>
       questionImageUrl,
       ...(answers && { answers }), // Include only if answers exist
       ...(numbers && { numbers }), // Include only if numbers exist
-      ...(options && { options }), // Include only if it's an MCQ question
+      ...(options && { options, correct_option: options[correctOptionIndex] }), // Include only if it's an MCQ question
     };
   });
 
@@ -243,4 +250,100 @@ export function convertToCamelCase(input: {
 
 export const removeCookie = (cookieName: string) => {
   document.cookie = `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+};
+
+export const replaceAt = (str: string, index: number, replacement: string) =>
+  str.slice(0, index) + replacement + str.slice(index + replacement.length);
+
+export const convertLearnerResponseToSingleResponse = (
+  questionData: QuestionData,
+  question: QuestionPropsType
+) => {
+  const answers = {} as Record<string, any>;
+
+  if (question.questionType === QuestionType.MCQ) {
+    answers.mcqAnswer = questionData.learner_response.result;
+    return answers;
+  }
+
+  if (question.questionType === QuestionType.FIB) {
+    if (question.operation === ArithmaticOperations.DIVISION) {
+      if (
+        [
+          FibType.FIB_QUOTIENT_REMAINDER,
+          FibType.FIB_QUOTIENT_REMAINDER_WITH_IMAGE,
+        ].includes(question.answers.fib_type!)
+      ) {
+        answers.answerQuotient = questionData.learner_response.quotient;
+        answers.answerRemainder = questionData.learner_response.remainder;
+      } else {
+        answers.fibAnswer = questionData.learner_response.result;
+      }
+      return answers;
+    }
+    answers.fibAnswer = questionData.learner_response.result;
+    return answers;
+  }
+
+  if (question.questionType === QuestionType.GRID_2) {
+    answers.row2Answers = questionData.learner_response.result?.split('');
+    answers.row1Answers = questionData.learner_response.answer_top?.split('');
+    return answers;
+  }
+
+  if (question.operation === ArithmaticOperations.ADDITION) {
+    if (question.answers.isPrefil) {
+      answers.topAnswer = questionData.learner_response.answer_top?.split('');
+    }
+    answers.resultAnswer = questionData.learner_response.result?.split('');
+    return answers;
+  }
+
+  if (question.operation === ArithmaticOperations.SUBTRACTION) {
+    if (question.answers.isPrefil) {
+      answers.topAnswer = questionData.learner_response.answer_top?.split('|');
+    }
+    answers.resultAnswer = questionData.learner_response.result?.split('');
+    return answers;
+  }
+
+  if (question.operation === ArithmaticOperations.MULTIPLICATION) {
+    if (question.answers.isIntermediatePrefill) {
+      const formattedParts =
+        questionData.learner_response.answerIntermediate?.split('#');
+      const resArray: string[][] = [];
+
+      formattedParts?.forEach((formattedPart) => {
+        resArray.push(formattedPart.split(''));
+      });
+      answers.answerIntermediate = resArray.flat();
+    }
+
+    const result = questionData.learner_response.result?.split('');
+    answers.resultAnswer = result;
+    return answers;
+  }
+
+  if (question.operation === ArithmaticOperations.DIVISION) {
+    answers.answerQuotient = questionData.learner_response.quotient?.split('');
+    answers.answerRemainder = questionData.learner_response.remainder
+      ?.padStart(question.answers.answerRemainder.length, '#')
+      .split('');
+
+    const intermediateArray: string[][] = [];
+    const parts = questionData.learner_response.answerIntermediate?.split('|');
+
+    const placeholders = question.answers.answerIntermediate.split('|');
+    placeholders.forEach((placeholder, index) => {
+      const partData = parts?.[index]?.padStart(placeholder.length, '#');
+      if (!partData) return;
+      intermediateArray.push(
+        partData.split('').map((char) => (char === '#' ? '' : char))
+      );
+    });
+    answers.answerIntermediate = intermediateArray;
+    return answers;
+  }
+
+  return answers;
 };

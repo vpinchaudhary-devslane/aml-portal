@@ -1,33 +1,47 @@
 /* eslint-disable no-nested-ternary */
-import React, { useEffect, useState, useRef } from 'react';
+import { useLanguage } from 'context/LanguageContext';
+import useEnterKeyHandler from 'hooks/useEnterKeyHandler';
+import useWindowSize from 'hooks/useWindowSize';
+import {
+  ArithmaticOperations,
+  operationMap,
+} from 'models/enums/ArithmaticOperations.enum';
+import { QuestionType } from 'models/enums/QuestionType.enum';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Confetti from 'react-confetti';
 import { useDispatch, useSelector } from 'react-redux';
-import ContainerLayout from 'shared-resources/components/ContainerLayout/ContainerLayout';
+import QuestionContainer from 'shared-resources/components/ContainerLayout/QuestionContainer';
+import Loader from 'shared-resources/components/Loader/Loader';
+import MultiLangText, {
+  getTranslatedString,
+} from 'shared-resources/components/MultiLangText/MultiLangText';
 import Question from 'shared-resources/components/Question';
+import QuestionButtonsComponent from 'shared-resources/components/QuestionButtonsComponent/QuestionButtonsComponent';
+import {
+  ClickedButtonType,
+  FeedbackType,
+  getButtonText,
+  getButtonTooltipMessage,
+  getFilteredAnswer,
+} from 'shared-resources/components/questionUtils';
 import {
   convertSingleResponseToLearnerResponse,
   transformQuestions,
 } from 'shared-resources/utils/helpers';
+import {
+  getIsAnswerCorrect,
+  getQuestionErrors,
+} from 'shared-resources/utils/logicHelper';
 import { fetchLogicEngineEvaluation } from 'store/actions/logicEngineEvaluation.action';
 import { syncFinalLearnerResponse } from 'store/actions/syncLearnerResponse.action';
 import { learnerIdSelector } from 'store/selectors/auth.selector';
 import { learnerJourneySelector } from 'store/selectors/learnerJourney.selector';
+import { islogicEngineLoadingSelector } from 'store/selectors/logicEngine.selector';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
-import Confetti from 'react-confetti';
-import useWindowSize from 'hooks/useWindowSize';
-import { QuestionType } from 'models/enums/QuestionType.enum';
 import {
   isIntermediateSyncInProgressSelector,
   isSyncInProgressSelector,
 } from 'store/selectors/syncResponseSelector';
-import { islogicEngineLoadingSelector } from 'store/selectors/logicEngine.selector';
-import Loader from 'shared-resources/components/Loader/Loader';
-import useEnterKeyHandler from 'hooks/useEnterKeyHandler';
-import _ from 'lodash';
-import { operationMap } from 'models/enums/ArithmaticOperations.enum';
-import { useLanguage } from 'context/LanguageContext';
-import MultiLangText, {
-  getTranslatedString,
-} from 'shared-resources/components/MultiLangText/MultiLangText';
 import { multiLangLabels } from 'utils/constants/multiLangLabels.constants';
 import { indexedDBService } from '../../../services/IndexedDBService';
 import { IDBDataStatus } from '../../../types/enum';
@@ -47,7 +61,10 @@ const Questions: React.FC = () => {
     isIntermediateSyncInProgressSelector
   );
   const dispatch = useDispatch();
-  const questionRef = useRef<{ submitForm: () => void } | null>(null);
+  const questionRef = useRef<{
+    submitForm: () => void;
+    resetForm: () => void;
+  } | null>(null);
   const { width, height } = useWindowSize();
   const isLogicEngineLoading = useSelector(islogicEngineLoadingSelector);
   const [keyPressed, setKeyPressed] = useState<{
@@ -58,6 +75,25 @@ const Questions: React.FC = () => {
     isBackSpaced: boolean;
     counter: number;
   }>({ isBackSpaced: false, counter: 0 });
+
+  const [currentQuestionFeedback, setCurrentQuestionFeedback] =
+    useState<FeedbackType | null>(null);
+  const clickedButtonRef = useRef<ClickedButtonType | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [currentQuestionErrors, setCurrentQuestionErrors] = useState<{
+    [key: string]: boolean[] | boolean[][];
+  }>({});
+  const lastAttemptedQuestionIndex = useRef<number>(0);
+
+  const currentQuestion = questions[currentQuestionIndex];
+
+  const isFeedbackAllowed = questionSet?.enable_feedback;
+
+  const resetFeedbackStates = useCallback(() => {
+    setCurrentQuestionFeedback(null);
+    setCurrentQuestionErrors({});
+    setShowFeedback(false);
+  }, []);
 
   useEffect(() => {
     const makeInitialDecisions = async () => {
@@ -88,9 +124,10 @@ const Questions: React.FC = () => {
                 !combinedAnsweredIds.includes(question.questionId)
             );
             setQuestions(transformedQuestions);
-            setCurrentQuestionIndex(
-              firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0
-            );
+            const index =
+              firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0;
+            setCurrentQuestionIndex(index);
+            lastAttemptedQuestionIndex.current = index;
           }
         }
       }
@@ -113,7 +150,7 @@ const Questions: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, learnerId, questions, questionSet]);
 
-  const evaluateLearner = () => {
+  const evaluateLearner = useCallback(() => {
     if (learnerId) {
       dispatch(
         fetchLogicEngineEvaluation({
@@ -122,7 +159,8 @@ const Questions: React.FC = () => {
         })
       );
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [learnerId]);
 
   useEffect(() => {
     /**
@@ -135,7 +173,9 @@ const Questions: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waitingBeforeEvaluation, isSyncing, isCompleted, learnerId]);
 
-  const handleNextClick = async () => {
+  const handleNextClick = useCallback(async () => {
+    resetFeedbackStates();
+
     if (isCompleted && learnerId) {
       const criteria = {
         status: IDBDataStatus.NOOP,
@@ -166,37 +206,158 @@ const Questions: React.FC = () => {
     } else if (questionRef.current) {
       questionRef.current.submitForm();
     }
-  };
-  const currentQuestion = questions[currentQuestionIndex];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentQuestionIndex,
+    evaluateLearner,
+    isCompleted,
+    isIntermediatelySyncing,
+    isSyncing,
+    learnerId,
+    questionSet,
+    questions.length,
+  ]);
 
-  const handleQuestionSubmit = async (gridData: any) => {
-    const currentTime = new Date().toISOString();
-    const newAnswer = {
-      ...gridData,
-      start_time: currentQuestionIndex === 0 ? currentTime : '',
-      end_time:
-        currentQuestionIndex === questions.length - 1 ? currentTime : '',
-    };
-    const filteredAnswer = {
-      questionId: newAnswer.questionId,
-      start_time: newAnswer.start_time,
-      end_time: newAnswer.end_time,
-      answers: _.omitBy(
-        {
-          topAnswer: newAnswer.topAnswer,
-          answerIntermediate: newAnswer?.answerIntermediate,
-          answerQuotient: newAnswer?.answerQuotient,
-          answerRemainder: newAnswer?.answerRemainder,
-          resultAnswer: newAnswer.resultAnswer,
-          row1Answers: newAnswer.row1Answers,
-          row2Answers: newAnswer.row2Answers,
-          fibAnswer: newAnswer.fibAnswer,
-          mcqAnswer: newAnswer.mcqAnswer,
-        },
-        _.isUndefined
-      ),
-      operation: newAnswer?.operation,
-    };
+  useEffect(() => {
+    let timer: any;
+    if (showFeedback) {
+      const skipFunction = async () => {
+        const isLatestQuestion =
+          currentQuestionIndex === lastAttemptedQuestionIndex.current;
+
+        const isLatestQuestionCorrectOrNoOP =
+          (currentQuestionFeedback === FeedbackType.CORRECT ||
+            currentQuestionFeedback === FeedbackType.NOOP) &&
+          isLatestQuestion;
+
+        if (isLatestQuestionCorrectOrNoOP) {
+          clickedButtonRef.current = ClickedButtonType.NEXT;
+          await handleNextClick();
+          setShowFeedback(false);
+        }
+      };
+
+      if (!isFeedbackAllowed) {
+        skipFunction();
+        return;
+      }
+
+      clearTimeout(timer);
+      timer = setTimeout(skipFunction, 2000);
+    }
+  }, [
+    currentQuestion?.questionType,
+    currentQuestionFeedback,
+    currentQuestionIndex,
+    handleNextClick,
+    isFeedbackAllowed,
+    showFeedback,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isFeedbackAllowed ||
+      currentQuestionIndex < lastAttemptedQuestionIndex.current
+    ) {
+      clickedButtonRef.current = ClickedButtonType.CHECK;
+      setTimeout(() => {
+        questionRef.current?.submitForm();
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex]);
+
+  const handleQuestionSubmit = () => {
+    questionRef.current?.resetForm();
+    if (currentQuestionIndex === lastAttemptedQuestionIndex.current) {
+      lastAttemptedQuestionIndex.current = currentQuestionIndex + 1;
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
+    resetFeedbackStates();
+  };
+
+  const handleCheckQuestion = async (
+    criteria: any,
+    transformedAnswer?: any,
+    updateIDB = false
+  ) => {
+    const { result: isAnswerCorrect, correctAnswer } = getIsAnswerCorrect(
+      currentQuestion,
+      transformedAnswer.learner_response
+    );
+
+    const syncedEntryExists = (await indexedDBService.queryObjectsByKeys(
+      criteria
+    )) as any[];
+
+    if (!isFeedbackAllowed) {
+      setShowFeedback(true);
+      setCurrentQuestionFeedback(FeedbackType.NOOP);
+    }
+
+    if (isFeedbackAllowed && isAnswerCorrect) {
+      setCurrentQuestionFeedback(FeedbackType.CORRECT);
+      setCurrentQuestionErrors({});
+      setShowFeedback(true);
+    } else if (isFeedbackAllowed && !isAnswerCorrect) {
+      setCurrentQuestionFeedback(FeedbackType.INCORRECT);
+      setShowFeedback(true);
+
+      if (
+        [QuestionType.GRID_1, QuestionType.GRID_2].includes(
+          currentQuestion?.questionType!
+        ) ||
+        (currentQuestion?.questionType === QuestionType.FIB &&
+          currentQuestion?.operation === ArithmaticOperations.DIVISION &&
+          currentQuestion?.answers?.fib_type === '2')
+      ) {
+        setCurrentQuestionErrors(
+          getQuestionErrors(
+            currentQuestion?.operation,
+            transformedAnswer.learner_response,
+            correctAnswer
+          )
+        );
+      }
+    }
+
+    if (!updateIDB) return;
+
+    // if question is synced in IDB or questionId in completed questions array,
+    // then update the question in IDB with status as REVISITED else do no update the status
+
+    if (syncedEntryExists && syncedEntryExists.length) {
+      await indexedDBService.updateObjectById(syncedEntryExists[0].id, {
+        ...transformedAnswer,
+        learner_id: learnerId,
+        status:
+          syncedEntryExists[0].status === IDBDataStatus.SYNCED
+            ? IDBDataStatus.REVISITED
+            : syncedEntryExists[0].status,
+      });
+      return;
+    }
+
+    const questionIdInCompletedQuestions =
+      learnerJourney?.completed_question_ids?.some(
+        (id) => id === criteria.question_id
+      );
+
+    await indexedDBService.addObject({
+      ...transformedAnswer,
+      learner_id: learnerId,
+      status: questionIdInCompletedQuestions
+        ? IDBDataStatus.REVISITED
+        : IDBDataStatus.NOOP,
+    });
+  };
+
+  const handleQuestionFormSubmit = async (gridData: any) => {
+    const filteredAnswer = getFilteredAnswer(
+      gridData,
+      lastAttemptedQuestionIndex.current,
+      questions.length
+    );
     const transformedAnswer = convertSingleResponseToLearnerResponse(
       filteredAnswer,
       questionSet!.identifier,
@@ -208,38 +369,101 @@ const Questions: React.FC = () => {
       question_set_id: questionSet!.identifier,
       learner_id: learnerId,
     };
-    const entryExists = (await indexedDBService.queryObjectsByKeys(
-      criteria
-    )) as any[];
 
-    if (entryExists && entryExists.length) {
-      await indexedDBService.updateObjectById(entryExists[0].id, {
-        ...transformedAnswer,
-        learner_id: learnerId,
-        status: IDBDataStatus.NOOP,
-      });
-    } else {
-      await indexedDBService.addObject({
-        ...transformedAnswer,
-        learner_id: learnerId,
-        status: IDBDataStatus.NOOP,
-      });
+    if (clickedButtonRef.current === ClickedButtonType.CHECK_AND_SUBMIT) {
+      handleCheckQuestion(criteria, transformedAnswer, true);
     }
 
-    setCurrentQuestionIndex((prev) => prev + 1);
+    if (
+      clickedButtonRef.current === ClickedButtonType.CHECK &&
+      currentQuestionIndex < lastAttemptedQuestionIndex.current
+    ) {
+      handleCheckQuestion(criteria, transformedAnswer);
+    }
+
+    if (
+      clickedButtonRef.current === ClickedButtonType.SKIP ||
+      clickedButtonRef.current === ClickedButtonType.NEXT
+    ) {
+      handleQuestionSubmit();
+    }
+
+    clickedButtonRef.current = null;
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (isCompleted) {
+      clickedButtonRef.current = ClickedButtonType.NEXT;
       handleNextClick();
+      return;
     }
-    if (questionRef.current && isFormValid) {
+    if (questionRef.current && !isSyncing && !currentQuestionFeedback) {
+      resetFeedbackStates();
+
+      clickedButtonRef.current = ClickedButtonType.CHECK_AND_SUBMIT;
       questionRef.current.submitForm();
     }
     event.preventDefault();
   };
 
   useEnterKeyHandler(handleKeyDown, [isFormValid, isCompleted]);
+
+  const handleKeyClick = (key: string) => {
+    if (showFeedback) {
+      setCurrentQuestionFeedback(null);
+      setShowFeedback(false);
+    }
+    setKeyPressed((prev) => ({ key, counter: prev.counter + 1 }));
+  };
+
+  const handleBackSpaceClick = (clicked: any) => {
+    if (showFeedback) {
+      setCurrentQuestionFeedback(null);
+      setShowFeedback(false);
+    }
+    setBackSpacePressed((prev) => ({
+      isBackSpaced: clicked,
+      counter: prev.counter + 1,
+    }));
+  };
+
+  const handlePrevClick = () => {
+    if (currentQuestionIndex > 0) {
+      resetFeedbackStates();
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleSkipClicked = () => {
+    if (currentQuestionIndex < lastAttemptedQuestionIndex.current) {
+      resetFeedbackStates();
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
+  };
+
+  const handlePrimaryButtonClicked = useCallback(() => {
+    setShowFeedback(false);
+    if (isCompleted) {
+      handleNextClick();
+      return;
+    }
+    if (!currentQuestionFeedback) {
+      clickedButtonRef.current = ClickedButtonType.CHECK_AND_SUBMIT;
+      questionRef.current?.submitForm();
+    }
+  }, [currentQuestionFeedback, handleNextClick, isCompleted]);
+
+  const handleSkipQuestionClicked = useCallback(() => {
+    setShowFeedback(false);
+    clickedButtonRef.current = ClickedButtonType.SKIP;
+    questionRef.current?.submitForm();
+  }, []);
+
+  const handleSkipToCurrentClicked = useCallback(() => {
+    resetFeedbackStates();
+    setCurrentQuestionIndex(lastAttemptedQuestionIndex.current ?? 0);
+  }, [resetFeedbackStates]);
+
   if (isSyncing || isLogicEngineLoading)
     return (
       <div className='flex justify-center items-center h-[80vh] '>
@@ -247,21 +471,10 @@ const Questions: React.FC = () => {
       </div>
     );
 
-  const handleKeyClick = (key: string) => {
-    setKeyPressed((prev) => ({ key, counter: prev.counter + 1 }));
-  };
-
-  const handleBackSpaceClick = (clicked: any) => {
-    setBackSpacePressed((prev) => ({
-      isBackSpaced: clicked,
-      counter: prev.counter + 1,
-    }));
-  };
-
   return (
     <>
       {isCompleted && <Confetti width={width} height={height} />}
-      <ContainerLayout
+      <QuestionContainer
         headerText={
           isCompleted
             ? getTranslatedString(language, multiLangLabels.congratulations)
@@ -303,44 +516,60 @@ const Questions: React.FC = () => {
             ) : questions.length && currentQuestion ? (
               <Question
                 ref={questionRef}
+                errors={currentQuestionErrors}
                 question={questions[currentQuestionIndex]}
-                onSubmit={(gridData) => handleQuestionSubmit(gridData)}
-                onValidityChange={(value: boolean) => setIsFormValid(value)}
+                onSubmit={handleQuestionFormSubmit}
+                onValidityChange={(value: boolean) => {
+                  setIsFormValid(value);
+                }}
                 keyPressed={keyPressed}
                 backSpacePressed={backSpacePressed}
+                setQuestionFeedback={() => {
+                  setShowFeedback(false);
+                  setCurrentQuestionFeedback(null);
+                }}
+                questionFeedback={currentQuestionFeedback}
               />
             ) : (
               ''
             )}
           </div>
         }
-        buttonText={
-          isSyncing
-            ? getTranslatedString(language, multiLangLabels.syncing)
-            : isCompleted
-            ? getTranslatedString(language, multiLangLabels.next_set)
-            : getTranslatedString(language, multiLangLabels.next)
-        }
-        onButtonClick={handleNextClick}
-        buttonDisabled={isSyncing || (!isCompleted && !isFormValid)}
-        toolTipMessage={
-          isSyncing
-            ? getTranslatedString(language, multiLangLabels.sync_in_progress)
-            : questions[currentQuestionIndex]?.questionType === QuestionType.MCQ
-            ? getTranslatedString(
-                language,
-                multiLangLabels.select_one_option_to_continue
-              )
-            : getTranslatedString(
-                language,
-                multiLangLabels.fill_in_all_the_empty_blanks_to_continue
-              )
-        }
         onKeyClick={handleKeyClick}
         onBackSpaceClick={handleBackSpaceClick}
         currentQuestion={currentQuestion}
-        noKeyboard={isCompleted}
         taxonomy={questionSet?.taxonomy}
+        renderButtons={
+          <QuestionButtonsComponent
+            primaryButtonText={getButtonText(language, isSyncing, isCompleted)}
+            primaryButtonTooltipMessage={getButtonTooltipMessage(
+              language,
+              isSyncing,
+              currentQuestion?.questionType,
+              currentQuestionFeedback
+            )}
+            disablePrimaryButton={
+              isSyncing ||
+              Boolean(currentQuestionFeedback) ||
+              (!isFormValid && !isCompleted)
+            }
+            disabledSecondaryButtons={isSyncing}
+            onPrimaryButtonClicked={handlePrimaryButtonClicked}
+            onSkipQuestionClicked={handleSkipQuestionClicked}
+            onSkipToCurrentClick={handleSkipToCurrentClicked}
+            showSkipToCurrentButton={
+              lastAttemptedQuestionIndex.current !== currentQuestionIndex
+            }
+            showSkipQuestionButton={
+              !isCompleted && currentQuestionFeedback === FeedbackType.INCORRECT
+            }
+          />
+        }
+        lastAttemptedQuestionIndex={lastAttemptedQuestionIndex.current}
+        onPrevClick={handlePrevClick}
+        onSkipClicked={handleSkipClicked}
+        currentQuestionFeedback={currentQuestionFeedback}
+        showFeedback={Boolean(isFeedbackAllowed && showFeedback)}
       />
     </>
   );

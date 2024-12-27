@@ -18,12 +18,18 @@ interface FIBQuestionProps {
   question: QuestionPropsType;
   formik: FormikProps<FormValues>;
   setActiveField: React.Dispatch<React.SetStateAction<keyof FormValues | null>>;
+  errors: {
+    [key: string]: boolean[] | boolean[][];
+  };
+  isAnswerIncorrect: boolean;
 }
 
 const FIBQuestion = ({
   question,
   formik,
   setActiveField,
+  errors,
+  isAnswerIncorrect,
 }: FIBQuestionProps) => {
   const { answers } = question;
   const {
@@ -87,7 +93,12 @@ const FIBQuestion = ({
                 onChange={formik.handleChange}
                 onFocus={handleSetField('answerQuotient')}
                 value={formik.values.answerQuotient}
-                className='!w-[236px]'
+                className={cx(
+                  '!w-[236px]',
+                  errors.answerQuotient && errors.answerQuotient.some(Boolean)
+                    ? 'border-red-500 focus:border-red-500 text-red-500'
+                    : ''
+                )}
               />
             </div>
 
@@ -99,7 +110,12 @@ const FIBQuestion = ({
                 value={formik.values.answerRemainder}
                 onChange={formik.handleChange}
                 maxLength={9}
-                className='!w-[236px]'
+                className={cx(
+                  '!w-[236px]',
+                  errors.answerRemainder && errors.answerRemainder.some(Boolean)
+                    ? 'border-red-500 focus:border-red-500 text-red-500'
+                    : ''
+                )}
               />
             </div>
           </div>
@@ -121,7 +137,11 @@ const FIBQuestion = ({
               value={formik.values.fibAnswer}
               onChange={formik.handleChange}
               maxLength={9}
-              className='!w-full'
+              className={cx(
+                '!w-full',
+                isAnswerIncorrect &&
+                  'border-red-500 focus:border-red-500 text-red-500'
+              )}
             />
           </div>
         </div>

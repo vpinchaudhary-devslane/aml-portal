@@ -11,16 +11,19 @@ import { FibType, QuestionType } from 'models/enums/QuestionType.enum';
 
 import { ArithmaticOperations } from 'models/enums/ArithmaticOperations.enum';
 import {
+  FeedbackType,
   FormValues,
   QuestionPropsType,
 } from 'shared-resources/components/questionUtils';
-import Loader from './Loader/Loader';
+import { convertLearnerResponseToSingleResponse } from 'shared-resources/utils/helpers';
+import { indexedDBService } from 'services/IndexedDBService';
 import MCQQuestion from './MCQQuestion';
 import FIBQuestion from './FIBQuestion';
 import Grid2Question from './Grid2Question';
 import Grid1Question from './Grid1Question';
+import Loader from './Loader/Loader';
 
-interface QuestionProps {
+export interface QuestionProps {
   question: QuestionPropsType;
   onSubmit: (gridData: any) => void;
   onValidityChange: (validity: boolean) => void;
@@ -32,6 +35,11 @@ interface QuestionProps {
     isBackSpaced: boolean;
     counter: number;
   };
+  errors: {
+    [key: string]: boolean[] | boolean[][];
+  };
+  setQuestionFeedback: () => void;
+  questionFeedback?: FeedbackType | null;
 }
 
 // Using forwardRef to forward refs to the parent component
@@ -43,14 +51,18 @@ const Question = forwardRef(
       onValidityChange,
       keyPressed,
       backSpacePressed,
+      errors,
+      setQuestionFeedback,
+      questionFeedback,
     }: QuestionProps,
     ref
   ) => {
     const { answers, numbers } = question;
-    const [isLoading, setIsLoading] = useState(true);
     const [activeField, setActiveField] = useState<keyof FormValues | null>(
       null
     );
+    const [isLoadingResponse, setIsLoadingResponse] = useState(false);
+    const [response, setResponse] = useState<any>({});
 
     const isFibQuestion = question.questionType === QuestionType.FIB;
     const isDivisionOperation =
@@ -364,18 +376,22 @@ const Question = forwardRef(
     const formik = useFormik<FormValues>({
       initialValues: {
         topAnswer:
-          question.operation === ArithmaticOperations.SUBTRACTION
+          response.topAnswer ||
+          (question.operation === ArithmaticOperations.SUBTRACTION
             ? answers?.answerTop
                 ?.split('|') // Spliting for subtraction
                 ?.map((val) => (val === 'B' ? '' : val)) // Handling blank input
             : answers?.answerTop
                 ?.split('')
-                ?.map((val) => (val === 'B' ? '' : val)),
-        resultAnswer: answers?.answerResult
-          ?.split('')
-          ?.map((val) => (val === 'B' ? '' : val)),
+                ?.map((val) => (val === 'B' ? '' : val))),
+        resultAnswer:
+          response.resultAnswer ||
+          answers?.answerResult
+            ?.split('')
+            ?.map((val) => (val === 'B' ? '' : val)),
         answerIntermediate:
-          question.operation === ArithmaticOperations.DIVISION
+          response.answerIntermediate ||
+          (question.operation === ArithmaticOperations.DIVISION
             ? answers?.answerIntermediate
                 ?.split('|')
                 .map((row) =>
@@ -389,27 +405,32 @@ const Question = forwardRef(
                   row
                     .split('')
                     .map((val) => (val === 'B' || val === '#' ? '' : val))
-                ),
-
+                )),
         answerQuotient:
-          question.questionType === QuestionType.GRID_1 &&
+          response.answerQuotient ||
+          (question.questionType === QuestionType.GRID_1 &&
           question.operation === ArithmaticOperations.DIVISION
             ? answers?.answerQuotient
                 ?.split('')
                 ?.map((val) => (val === 'B' ? '' : val))
-            : '',
+            : ''),
         answerRemainder:
-          question.questionType === QuestionType.GRID_1 &&
+          response.answerRemainder ||
+          (question.questionType === QuestionType.GRID_1 &&
           question.operation === ArithmaticOperations.DIVISION
             ? answers?.answerRemainder
                 ?.split('')
                 ?.map((val) => (val === 'B' ? '' : val))
-            : '',
-        row1Answers: Array(maxLength).fill(''),
-        row2Answers: Array(maxLength).fill(''),
+            : ''),
+        row1Answers: Array(maxLength - (response.row1Answers?.length ?? 0))
+          .fill('')
+          .concat(response.row1Answers ?? []),
+        row2Answers: Array(maxLength - (response.row2Answers?.length ?? 0))
+          .fill('')
+          .concat(response.row2Answers ?? []),
         questionType: question.questionType,
-        fibAnswer: '',
-        mcqAnswer: '',
+        fibAnswer: response.fibAnswer || '',
+        mcqAnswer: response.mcqAnswer || '',
         questionId: question.questionId,
       },
       enableReinitialize: true,
@@ -446,11 +467,9 @@ const Question = forwardRef(
             mcqAnswer: values.mcqAnswer,
           });
         }
-        // Reset the form
-        setActiveField(null);
-        formik.resetForm();
       },
     });
+
     const handleSetFieldValue = (
       _activeField: keyof FormValues,
       value?: string
@@ -475,6 +494,27 @@ const Question = forwardRef(
       const [mainKey, subKey] = input.split('.');
       return { mainKey, subKey };
     };
+
+    useEffect(() => {
+      const fetchResponse = async () => {
+        setIsLoadingResponse(true);
+        const entryExists = (await indexedDBService.queryObjectsByKey(
+          'question_id',
+          question.questionId
+        )) as any[];
+        if (entryExists && entryExists.length) {
+          const resp = convertLearnerResponseToSingleResponse(
+            entryExists[0],
+            question
+          );
+          setResponse(resp);
+        }
+        setIsLoadingResponse(false);
+      };
+      fetchResponse();
+
+      return () => setResponse({});
+    }, [question]);
 
     useEffect(() => {
       if (!keyPressed || !backSpacePressed || !activeField) return;
@@ -516,30 +556,30 @@ const Question = forwardRef(
     // Expose the submitForm method to the parent component
     useImperativeHandle(ref, () => ({
       submitForm: formik.handleSubmit,
+      resetForm: () => {
+        setActiveField(null);
+        formik.resetForm();
+      },
     }));
 
     useEffect(() => {
+      if (formik.isValidating) return;
       onValidityChange(formik.isValid); // Pass the form's validity to the parent
-    }, [formik.isValid]);
+    }, [formik.isValid, formik.isValidating, onValidityChange]);
 
-    useEffect(() => {
-      setIsLoading(true);
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 300);
+    if (isLoadingResponse) {
+      return <Loader />;
+    }
 
-      return () => clearTimeout(timer);
-    }, [question]);
-
-    return isLoading ? (
-      <Loader />
-    ) : (
+    return (
       <form
         onSubmit={formik.handleSubmit}
+        onChange={() => setQuestionFeedback()}
         className='flex flex-col space-y-4 items-start'
       >
         {question.questionType === QuestionType.GRID_1 && (
           <Grid1Question
+            errors={errors}
             formik={formik}
             maxLength={maxLength}
             question={question}
@@ -553,6 +593,7 @@ const Question = forwardRef(
             maxLength={maxLength}
             question={question}
             setActiveField={setActiveField}
+            errors={errors}
           />
         )}
 
@@ -561,11 +602,17 @@ const Question = forwardRef(
             formik={formik}
             question={question}
             setActiveField={setActiveField}
+            errors={errors}
+            isAnswerIncorrect={questionFeedback === FeedbackType.INCORRECT}
           />
         )}
 
         {question.questionType === QuestionType.MCQ && (
-          <MCQQuestion formik={formik} question={question} />
+          <MCQQuestion
+            formik={formik}
+            question={question}
+            setQuestionFeedback={setQuestionFeedback}
+          />
         )}
       </form>
     );
