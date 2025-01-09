@@ -1,9 +1,7 @@
 import React from 'react';
 
-type Props = {};
-
-const AnimatedTryAgain = (props: Props) => (
-  <div className='relative flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full'>
+const AnimatedTryAgain = () => (
+  <div className='relative flex items-center justify-center w-16 h-16 bg-black rounded-full'>
     <svg
       xmlns='http://www.w3.org/2000/svg'
       viewBox='0 0 24 24'
