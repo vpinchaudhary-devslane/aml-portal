@@ -175,7 +175,7 @@ const subGrid1Answer = (
     ? result.toString().padStart(n1Str.length, '0')
     : result.toString();
 
-  if (isPrefil && answerTop !== answer.answerTop)
+  if (isPrefil && answerTop !== answer.answerTop?.replace(/#/g, '0'))
     return {
       result: false,
       correctAnswer: {
