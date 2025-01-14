@@ -201,7 +201,7 @@ const subGrid1Answer = (
   };
 };
 
-const addFIBAnswer = (
+const fIBAnswerExceptDivision = (
   question: QuestionPropsType,
   answer: LearnerResponse
 ): ValidationResult => {
@@ -209,18 +209,13 @@ const addFIBAnswer = (
     answers: { result },
   } = question;
 
-  return { result: answer.result?.toString() === result.toString() };
-};
+  const learnerAnswer = String(answer.result ?? '');
+  const correctAnswer = String(result ?? '');
 
-const subFIBAnswer = (
-  question: QuestionPropsType,
-  answer: LearnerResponse
-): ValidationResult => {
-  const {
-    answers: { result },
-  } = question;
-
-  return { result: answer.result === result.toString() };
+  return {
+    result:
+      Number(learnerAnswer).toString() === Number(correctAnswer).toString(),
+  };
 };
 
 const multiplicationGrid1Answer = (
@@ -282,17 +277,6 @@ const multiplicationGrid1Answer = (
       },
     },
   };
-};
-
-const multiplicationFIBAnswer = (
-  question: QuestionPropsType,
-  answer: LearnerResponse
-): ValidationResult => {
-  const {
-    answers: { result },
-  } = question;
-
-  return { result: answer.result === result.toString() };
 };
 
 const grid2Answer = (
@@ -610,15 +594,21 @@ const divisionFIBAnswer = (
   if (
     [FibType.FIB_STANDARD_WITH_IMAGE, FibType.FIB_STANDARD].includes(fibType!)
   ) {
-    return { result: answer.result === result.toString() };
+    const learnerAnswer = String(answer.result ?? '');
+    const correctAnswer = String(result ?? '');
+
+    return {
+      result:
+        Number(learnerAnswer).toString() === Number(correctAnswer).toString(),
+    };
   }
 
-  const quotient = (
-    result as { quotient: string; remainder: string }
-  )?.quotient?.toString();
-  const remainder = (
-    result as { quotient: string; remainder: string }
-  )?.remainder?.toString();
+  const quotient = String(
+    (result as { quotient: string; remainder: string })?.quotient ?? ''
+  );
+  const remainder = String(
+    (result as { quotient: string; remainder: string })?.remainder ?? ''
+  );
 
   if (
     [
@@ -626,16 +616,27 @@ const divisionFIBAnswer = (
       FibType.FIB_QUOTIENT_REMAINDER,
     ].includes(fibType!)
   ) {
+    const learnerQuotient = String(answer.quotient ?? '');
+    const learnerRemainder = String(answer.remainder ?? '');
+
+    const correctAnswerQuotient = Number(quotient ?? '').toString();
+    const correctAnswerRemainder = Number(remainder ?? '').toString();
+
+    const isLearnerQuotientCorrect =
+      Number(learnerQuotient).toString() === correctAnswerQuotient;
+    const isLearnerRemainderCorrect =
+      Number(learnerRemainder).toString() === correctAnswerRemainder;
+
     return {
-      result: answer.quotient === quotient && answer.remainder === remainder,
+      result: isLearnerQuotientCorrect && isLearnerRemainderCorrect,
       correctAnswer: {
-        ...(answer.quotient !== quotient && {
+        ...(!isLearnerQuotientCorrect && {
           answerQuotient: {
             result: false,
             correctAnswer: remainder,
           },
         }),
-        ...(answer.remainder !== remainder && {
+        ...(!isLearnerRemainderCorrect && {
           answerRemainder: {
             result: false,
             correctAnswer: quotient,
@@ -664,17 +665,17 @@ export const getIsAnswerCorrect = (
     case 'Addition_Grid-1':
       return addGrid1Answer(question, answer);
     case 'Addition_Fib':
-      return addFIBAnswer(question, answer);
+      return fIBAnswerExceptDivision(question, answer);
 
     case 'Subtraction_Grid-1':
       return subGrid1Answer(question, answer);
     case 'Subtraction_Fib':
-      return subFIBAnswer(question, answer);
+      return fIBAnswerExceptDivision(question, answer);
 
     case 'Multiplication_Grid-1':
       return multiplicationGrid1Answer(question, answer);
     case 'Multiplication_Fib':
-      return multiplicationFIBAnswer(question, answer);
+      return fIBAnswerExceptDivision(question, answer);
 
     case 'Division_Grid-1':
       return divisionGrid1Answer(question, answer);
