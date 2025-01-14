@@ -1,4 +1,3 @@
-import ENV_CONFIG from 'constant/env.config';
 import React, { Suspense, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import store from 'store';
@@ -6,8 +5,6 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import NavigationHandler from 'shared-resources/components/NavigationHandler';
 import { ToastContainer } from 'react-toastify';
-import * as Sentry from '@sentry/react';
-import { Integrations } from '@sentry/tracing';
 import { LanguageProvider } from 'context/LanguageContext';
 import { errorBoundaryHelper } from './utils/helpers/errorBoundary.helper';
 import ErrorFallbackComponent from './utils/components/ErrorFallbackComponent';
@@ -21,6 +18,7 @@ import Login from './views/login/Login';
 import AML404Component from './utils/components/AML404Component';
 import 'react-toastify/dist/ReactToastify.css';
 import { indexedDBService } from './services/IndexedDBService';
+import withTelemetry from './HOC/withTelemetry';
 
 // Sentry.init({
 //   dsn: ENV_CONFIG.VITE_SENTRY_DSN,
@@ -70,7 +68,9 @@ const App: React.FC = () => {
                           key={route.key}
                           Component={
                             route.component &&
-                            AuthenticatedRouteHOC(route.component)
+                            AuthenticatedRouteHOC(
+                              withTelemetry(route.component)
+                            )
                           }
                         />
                       ))}

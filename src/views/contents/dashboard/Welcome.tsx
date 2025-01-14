@@ -10,8 +10,13 @@ import MultiLangText, {
 import { loggedInUserSelector } from 'store/selectors/auth.selector';
 import { questionsSetSelector } from 'store/selectors/questionSet.selector';
 import { multiLangLabels } from 'utils/constants/multiLangLabels.constants';
+import { TelemetryDataEventType } from '../../../models/enums/telemetryDataEventType.enum';
 
-const Welcome: React.FC = () => {
+type Props = {
+  onAssess?: (eventType: TelemetryDataEventType, data: any) => void;
+};
+
+const Welcome: React.FC<Props> = (props) => {
   const navigate = useNavigate();
   const userSelector = useSelector(loggedInUserSelector);
   const questionsSet = useSelector(questionsSetSelector);
@@ -27,6 +32,9 @@ const Welcome: React.FC = () => {
 
   const handleStartClick = () => {
     navigate('/instructions'); // Redirect to instructions
+    props?.onAssess?.(TelemetryDataEventType.QUESTION_ATTEMPTED, {
+      event: 'Start clicked',
+    });
   };
 
   useEnterKeyHandler(handleStartClick);
