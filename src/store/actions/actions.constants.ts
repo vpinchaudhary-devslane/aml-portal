@@ -63,3 +63,9 @@ export enum TelemetryDataActionType {
   SYNC_TELEMETRY_DATA_COMPLETE = 'sync/telemetry/data/complete',
   SYNC_TELEMETRY_DATA_ERROR = 'sync/telemetry/data/error',
 }
+
+export enum AudioDataActionType {
+  GET_AUDIO = 'audio/get',
+  GET_AUDIO_COMPLETED = 'audio/get/completed',
+  GET_AUDIO_ERROR = 'audio/get/error',
+}

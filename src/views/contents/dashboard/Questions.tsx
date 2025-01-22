@@ -43,6 +43,7 @@ import {
   isSyncInProgressSelector,
 } from 'store/selectors/syncResponseSelector';
 import { multiLangLabels } from 'utils/constants/multiLangLabels.constants';
+import { getAudioRecordSelector } from 'store/selectors/audio.selector';
 import { indexedDBService } from '../../../services/IndexedDBService';
 import { IDBDataStatus } from '../../../types/enum';
 import { TelemetryDataEventType } from '../../../models/enums/telemetryDataEventType.enum';
@@ -93,6 +94,8 @@ const Questions: React.FC<Props> = ({ onAssess }) => {
   const currentQuestion = questions[currentQuestionIndex];
 
   const isFeedbackAllowed = questionSet?.enable_feedback;
+
+  const audioRecords = useSelector(getAudioRecordSelector);
 
   const resetFeedbackStates = useCallback(() => {
     setCurrentQuestionFeedback(null);
@@ -624,6 +627,9 @@ const Questions: React.FC<Props> = ({ onAssess }) => {
         }}
         currentQuestionFeedback={currentQuestionFeedback}
         showFeedback={Boolean(isFeedbackAllowed && showFeedback)}
+        audioUrl={
+          audioRecords[currentQuestion?.questionId]?.[language]?.audio_url
+        }
       />
     </>
   );

@@ -11,6 +11,7 @@ import { logicEngineReducer } from './logicEngine.reducer';
 import { boardReducer } from './board.reducer';
 import { telemetryDataReducer } from './telemetryData.reducer';
 import { arrangeObjectKeysInAlphabeticOrder } from '../../shared-resources/utils/helpers';
+import { audioReducer } from './audio.reducer';
 
 const appReducer = combineReducers(
   arrangeObjectKeysInAlphabeticOrder({
@@ -24,6 +25,7 @@ const appReducer = combineReducers(
     logicEngineReducer,
     boardReducer,
     telemetryDataReducer,
+    audio: audioReducer,
   })
 );
 

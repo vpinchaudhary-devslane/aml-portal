@@ -17,8 +17,9 @@ import {
 } from 'shared-resources/components/questionUtils';
 import { convertLearnerResponseToSingleResponse } from 'shared-resources/utils/helpers';
 import { indexedDBService } from 'services/IndexedDBService';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { learnerIdSelector } from 'store/selectors/auth.selector';
+import { getAudioRecords } from 'store/actions/audio.action';
 import MCQQuestion from './MCQQuestion';
 import FIBQuestion from './FIBQuestion';
 import Grid2Question from './Grid2Question';
@@ -60,6 +61,7 @@ const Question = forwardRef(
     ref
   ) => {
     const learnerId = useSelector(learnerIdSelector);
+    const dispatch = useDispatch();
     const { answers, numbers } = question;
     const [activeField, setActiveField] = useState<keyof FormValues | null>(
       null
@@ -364,7 +366,7 @@ const Question = forwardRef(
     });
 
     const maxLength = Math.max(
-      ...Object.values(numbers).map((num) => (num || '').length)
+      ...Object.values(numbers).map((num) => (num.toString() || '').length)
     );
 
     // replace empty string values with "0" which fall after first "number" element
@@ -516,6 +518,7 @@ const Question = forwardRef(
         setIsLoadingResponse(false);
       };
       fetchResponse();
+      dispatch(getAudioRecords({ question_id: question?.questionId }));
 
       return () => setResponse({});
     }, [question, learnerId]);
