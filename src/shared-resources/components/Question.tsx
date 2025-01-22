@@ -17,6 +17,8 @@ import {
 } from 'shared-resources/components/questionUtils';
 import { convertLearnerResponseToSingleResponse } from 'shared-resources/utils/helpers';
 import { indexedDBService } from 'services/IndexedDBService';
+import { useSelector } from 'react-redux';
+import { learnerIdSelector } from 'store/selectors/auth.selector';
 import MCQQuestion from './MCQQuestion';
 import FIBQuestion from './FIBQuestion';
 import Grid2Question from './Grid2Question';
@@ -57,6 +59,7 @@ const Question = forwardRef(
     }: QuestionProps,
     ref
   ) => {
+    const learnerId = useSelector(learnerIdSelector);
     const { answers, numbers } = question;
     const [activeField, setActiveField] = useState<keyof FormValues | null>(
       null
@@ -498,10 +501,11 @@ const Question = forwardRef(
     useEffect(() => {
       const fetchResponse = async () => {
         setIsLoadingResponse(true);
-        const entryExists = (await indexedDBService.queryObjectsByKey(
-          'question_id',
-          question.questionId
-        )) as any[];
+        const entryExists = (await indexedDBService.queryObjectsByKeys({
+          question_id: question.questionId,
+          learner_id: learnerId,
+        })) as any[];
+
         if (entryExists && entryExists.length) {
           const resp = convertLearnerResponseToSingleResponse(
             entryExists[0],
@@ -514,7 +518,7 @@ const Question = forwardRef(
       fetchResponse();
 
       return () => setResponse({});
-    }, [question]);
+    }, [question, learnerId]);
 
     useEffect(() => {
       if (!keyPressed || !backSpacePressed || !activeField) return;
