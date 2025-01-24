@@ -26,6 +26,7 @@ type Props = {
   onSkipClicked?: () => void;
   currentQuestionFeedback?: FeedbackType | null;
   showFeedback: boolean;
+  audioUrl?: string;
 };
 
 const QuestionContainer = ({
@@ -44,6 +45,7 @@ const QuestionContainer = ({
   onSkipClicked,
   currentQuestionFeedback,
   showFeedback,
+  audioUrl,
 }: Props) => (
   <div className='relative flex flex-col flex-1 w-full px-20 pb-4'>
     <div>
@@ -54,7 +56,7 @@ const QuestionContainer = ({
           questionsLength={questionsLength}
         />
       )}
-      <QuestionHeader HeaderText={headerText} />
+      <QuestionHeader HeaderText={headerText} audioURL={audioUrl} />
     </div>
     <div className='flex flex-1 md:flex-row flex-col min-h-0'>
       <div className='md:w-[65%] w-full flex flex-col'>

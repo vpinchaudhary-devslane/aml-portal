@@ -6,6 +6,7 @@ import logicEngineEvaluationSaga from './logicEngineEvaluation.saga';
 import syncLearnerResponseSaga from './SyncLearnerResponse.saga';
 import boardSaga from './board.saga';
 import syncLearnerTelemetryDataSaga from './SyncLearnerTelemetryData.saga';
+import { audioSaga } from './audio.saga';
 
 export default function* rootSaga() {
   yield all([
@@ -16,5 +17,6 @@ export default function* rootSaga() {
     fork(syncLearnerResponseSaga),
     fork(boardSaga),
     fork(syncLearnerTelemetryDataSaga),
+    fork(audioSaga),
   ]);
 }
