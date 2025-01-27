@@ -572,9 +572,6 @@ const Question = forwardRef(
       return <Loader />;
     }
 
-    console.log('##', formik.values);
-    console.log('##', formik.errors);
-
     return (
       <form
         onSubmit={formik.handleSubmit}

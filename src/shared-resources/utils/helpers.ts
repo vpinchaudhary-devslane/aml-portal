@@ -196,7 +196,6 @@ export function convertSingleResponseToLearnerResponse(
     answers?.answerIntermediate &&
     operation === ArithmaticOperations.DIVISION
   ) {
-    console.log('answerIntermediate', answers.answerIntermediate);
     answerIntermediate = answers.answerIntermediate
       .map(
         (row: any) =>
@@ -208,8 +207,8 @@ export function convertSingleResponseToLearnerResponse(
   if (answers?.topAnswer) {
     answer_top =
       operation === ArithmaticOperations.SUBTRACTION
-        ? answers.topAnswer.join('|')
-        : answers.topAnswer.join('');
+        ? answers.topAnswer.map((i: string) => (i === '' ? 'B' : i)).join('|')
+        : answers.topAnswer.map((i: string) => (i === '' ? 'B' : i)).join('');
   }
   // Build the learner response
   const learner_response: LearnerResponse = {};
@@ -315,7 +314,9 @@ export const convertLearnerResponseToSingleResponse = (
 
   if (question.operation === ArithmaticOperations.ADDITION) {
     if (question.answers.isPrefil) {
-      answers.topAnswer = questionData.learner_response.answerTop?.split('');
+      answers.topAnswer = questionData.learner_response.answerTop
+        ?.split('')
+        ?.map((i: string) => (i === 'B' ? '' : i));
     }
     answers.resultAnswer = questionData.learner_response.result?.split('');
     return answers;
@@ -323,7 +324,9 @@ export const convertLearnerResponseToSingleResponse = (
 
   if (question.operation === ArithmaticOperations.SUBTRACTION) {
     if (question.answers.isPrefil) {
-      answers.topAnswer = questionData.learner_response.answerTop?.split('|');
+      answers.topAnswer = questionData.learner_response.answerTop
+        ?.split('|')
+        ?.map((i: string) => (i === 'B' ? '' : i));
     }
     answers.resultAnswer = questionData.learner_response.result?.split('');
     return answers;

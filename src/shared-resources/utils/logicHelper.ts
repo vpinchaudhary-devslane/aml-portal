@@ -71,8 +71,7 @@ const addGrid1Answer = (
   const isResultCorrect = resultStr === answer.result;
 
   const hasNoCarryStepsByLearner =
-    isResultCorrect &&
-    question.answers.answerTop?.replace(/B/g, '') === answer.answerTop;
+    isResultCorrect && question.answers.answerTop === answer.answerTop;
 
   let carryString = '';
   if (isPrefil && !hasNoCarryStepsByLearner) {
@@ -184,8 +183,7 @@ const subGrid1Answer = (
   const isResultCorrect = resultStr === answer.result;
 
   const hasNoCarryStepsByLearner =
-    isResultCorrect &&
-    question.answers.answerTop?.replace(/B/g, '') === answer.answerTop;
+    isResultCorrect && question.answers.answerTop === answer.answerTop;
 
   if (
     !hasNoCarryStepsByLearner &&
@@ -549,7 +547,7 @@ const divisionGrid1Answer = (
 
   if (
     !hasNoIntermediateStepsByLearner &&
-    answer.answerIntermediate !== intermediateSteps.join('|')
+    answer.answerIntermediate?.replace(/B/g, '') !== intermediateSteps.join('|')
   )
     return {
       result: false,
