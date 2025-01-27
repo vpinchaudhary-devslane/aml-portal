@@ -58,11 +58,11 @@ const FIBQuestion = ({
   const renderFibContent = () => {
     if (!shouldRenderFibWithImage) {
       return (
-        <p className='text-4xl font-semibold text-headingTextColor pt-[23px] pb-[22px] px-[7px]'>
+        <p className='text-4xl mr-2 font-semibold text-headingTextColor pt-[23px] pb-[22px] px-[7px]'>
           {Object.values(question?.numbers || {}).join(
-            operationMap[question.operation]
-          )}{' '}
-          =
+            ` ${operationMap[question?.operation]} `
+          )}
+          {` = `}
         </p>
       );
     }
