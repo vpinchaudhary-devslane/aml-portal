@@ -366,7 +366,7 @@ const Question = forwardRef(
     });
 
     const maxLength = Math.max(
-      ...Object.values(numbers).map((num) => (num.toString() || '').length)
+      ...Object.values(numbers).map((num) => (num?.toString() || '').length)
     );
 
     // replace empty string values with "0" which fall after first "number" element
