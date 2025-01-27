@@ -87,37 +87,22 @@ const Question = forwardRef(
           answers.fib_type === FibType.FIB_STANDARD_WITH_IMAGE));
 
     const validationSchema = Yup.object({
-      topAnswer: Yup.array()
-        .of(
-          Yup.string().test(
-            'is-topAnswer-valid',
-            'Must be a single digit or #',
-            (value: any) => {
-              if (!answers?.isPrefil) {
-                return true; // Skip validation if isPrefill is false
-              }
-              return question.operation === ArithmaticOperations.SUBTRACTION
-                ? /^\d{1,2}$|^#$/.test(value)
-                : /^\d$/.test(value) || value === '#'; // Valid when it's a digit or #
-            }
-          )
-        )
-        .test(
-          'is-no-empty-strings',
-          'Top answer cannot be empty',
+      topAnswer: Yup.array().of(
+        Yup.string().test(
+          'is-topAnswer-valid',
+          'Must be a single digit or #',
           (value: any) => {
             if (!answers?.isPrefil) {
               return true; // Skip validation if isPrefill is false
             }
-            return value.every((item: string) => item !== ''); // Check that no empty strings are present
+            if (value === '' || value === undefined) return true;
+
+            return question.operation === ArithmaticOperations.SUBTRACTION
+              ? /^\d{1,2}$|^#$/.test(value)
+              : /^\d$/.test(value) || value === '#'; // Valid when it's a digit or #
           }
         )
-        .test('is-topAnswer-required', 'Top answer is required', (value) => {
-          if (!answers?.isPrefil) {
-            return true; // Skip validation if isPrefill is false
-          }
-          return value && value.length > 0; // Ensure the array has at least one valid entry
-        }),
+      ),
 
       answerIntermediate: Yup.lazy(() => {
         if (
@@ -144,7 +129,8 @@ const Question = forwardRef(
                     const originalChar = parts[+rowIndex]?.[+colIndex]; // Get the original character
                     if (question.operation === ArithmaticOperations.DIVISION) {
                       if (originalChar === 'B') {
-                        // "B" must be filled with a number
+                        // "B" must be filled with a number or empty
+                        if (value === '' || value === undefined) return true;
                         return /^\d$/.test(value);
                       }
                       if (originalChar === '#') {
@@ -178,11 +164,17 @@ const Question = forwardRef(
                     const hasValidInput = row?.some((input) => {
                       const normalizedInput = input ?? ''; // Treating null/undefined as empty
                       // Only validating cells marked as 'B' in the original string
-                      return (
-                        originalChar === 'B' &&
-                        !!normalizedInput &&
-                        /^\d$/.test(normalizedInput)
-                      );
+
+                      if (originalChar === 'B' && Boolean(normalizedInput)) {
+                        if (
+                          normalizedInput === '' ||
+                          normalizedInput === undefined
+                        )
+                          return true;
+
+                        return /^\d$/.test(normalizedInput);
+                      }
+                      return false;
                     });
 
                     return hasValidInput; // At least one valid input in the row
@@ -205,7 +197,8 @@ const Question = forwardRef(
                 if (!answers?.isIntermediatePrefill) {
                   return true; // Validation passes without errors
                 }
-                return !!value;
+
+                return value === '' || value === undefined || Boolean(value);
               } // Check that each input is not empty
             )
           );
@@ -578,6 +571,9 @@ const Question = forwardRef(
     if (isLoadingResponse) {
       return <Loader />;
     }
+
+    console.log('##', formik.values);
+    console.log('##', formik.errors);
 
     return (
       <form

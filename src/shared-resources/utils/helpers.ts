@@ -128,7 +128,7 @@ function formatAnswerIntermediate(
       .split('')
       .map((char, index) => {
         if (char === 'B') {
-          return flatPart[index];
+          return flatPart[index] || 'B';
         }
         return char;
       })
@@ -196,9 +196,11 @@ export function convertSingleResponseToLearnerResponse(
     answers?.answerIntermediate &&
     operation === ArithmaticOperations.DIVISION
   ) {
+    console.log('answerIntermediate', answers.answerIntermediate);
     answerIntermediate = answers.answerIntermediate
       .map(
-        (row: any) => row.map((cell: any) => (cell === '' ? '' : cell)).join('') // Replace empty string with '#' and join elements
+        (row: any) =>
+          row.map((cell: any) => (cell === '' ? 'B' : cell)).join('') // Replace empty string with '#' and join elements
       )
       .join('|');
   }
@@ -334,7 +336,7 @@ export const convertLearnerResponseToSingleResponse = (
       const resArray: string[][] = [];
 
       formattedParts?.forEach((formattedPart) => {
-        resArray.push(formattedPart.split(''));
+        resArray.push(formattedPart.split('').map((i) => (i === 'B' ? '' : i)));
       });
       answers.answerIntermediate = resArray.flat();
     }
@@ -358,7 +360,10 @@ export const convertLearnerResponseToSingleResponse = (
       const partData = parts?.[index]?.padStart(placeholder.length, '#');
       if (!partData) return;
       intermediateArray.push(
-        partData.split('').map((char) => (char === '#' ? '' : char))
+        partData
+          .split('')
+          // eslint-disable-next-line no-nested-ternary
+          .map((char) => (char === '#' ? '' : char === 'B' ? '' : char))
       );
     });
     answers.answerIntermediate = intermediateArray;

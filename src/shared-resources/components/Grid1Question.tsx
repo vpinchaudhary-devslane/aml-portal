@@ -98,35 +98,46 @@ const Grid1Question = ({
 
   const renderTopAnswerInputs = () => (
     <div className='flex justify-end space-x-2 self-end'>
-      {formik.values?.topAnswer?.map((char, index) => (
-        <div key={`top-${index}`}>
-          {char === '#' ? (
-            <div className='w-[46px] h-[61px]' /> // Render blank space
-          ) : (
-            <AmlInput
-              name={`topAnswer.${index}`}
-              onFocus={() =>
-                setActiveField(`topAnswer.${index}` as keyof FormValues)
-              }
-              value={char}
-              onChange={formik.handleChange}
-              maxLength={
-                question.operation === ArithmaticOperations.SUBTRACTION ? 2 : 1
-              } // Allow multiple digits for subtraction
-              className={cx(
-                showErrors &&
-                  (errors.topAnswer && errors.topAnswer[index]
-                    ? 'showWrongInput'
-                    : 'showCorrectInput'),
-                question.operation === ArithmaticOperations.SUBTRACTION
-                  ? '!text-[24px]'
-                  : 'text-[36px]'
+      {answers.answerTop
+        ?.split(
+          question.operation === ArithmaticOperations.SUBTRACTION ? '|' : ''
+        )
+        .map((fillVal, index) => {
+          const char = formik.values?.topAnswer?.[index] ?? '';
+          return (
+            <div key={`top-${index}`}>
+              {char === '#' ? (
+                <div className='w-[46px] h-[61px]' /> // Render blank space
+              ) : (
+                <AmlInput
+                  name={`topAnswer.${index}`}
+                  onFocus={() =>
+                    setActiveField(`topAnswer.${index}` as keyof FormValues)
+                  }
+                  value={char}
+                  onChange={formik.handleChange}
+                  maxLength={
+                    question.operation === ArithmaticOperations.SUBTRACTION
+                      ? 2
+                      : 1
+                  } // Allow multiple digits for subtraction
+                  className={cx(
+                    showErrors &&
+                      (errors.topAnswer && errors.topAnswer[index]
+                        ? 'showWrongInput'
+                        : 'showCorrectInput'),
+                    question.operation === ArithmaticOperations.SUBTRACTION
+                      ? '!text-[24px]'
+                      : 'text-[36px]',
+                    fillVal !== 'B' &&
+                      'border-none !bg-transparent !text-headingTextColor'
+                  )}
+                  disabled={isTopAnswerDisabled(char, index)}
+                />
               )}
-              disabled={isTopAnswerDisabled(char, index)}
-            />
-          )}
-        </div>
-      ))}
+            </div>
+          );
+        })}
       {question.operation === ArithmaticOperations.ADDITION && (
         <div className='w-12 h-10 flex items-center justify-center font-bold text-[36px]' />
       )}
@@ -137,22 +148,25 @@ const Grid1Question = ({
     <div className='flex flex-col space-y-2 self-end'>
       {Object.keys(numbers).map((key, idx) => (
         <div key={key} className='flex justify-end space-x-2'>
-          {numbers[key].split('').map((digit, index) => (
-            <div
-              key={index}
-              className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px] relative'
-            >
-              {digit}
-              {question.operation === ArithmaticOperations.SUBTRACTION &&
-                !!answers.isPrefil &&
-                idx === 0 &&
-                formik.values.topAnswer?.[index] !== '#' && (
-                  <div className='absolute inset-0'>
-                    <div className='absolute w-full h-0 border-t-4 border-dotted border-red-700 rotate-45 top-1/2 -translate-y-1/2' />
-                  </div>
-                )}
-            </div>
-          ))}
+          {numbers[key]
+            ?.toString()
+            ?.split('')
+            .map((digit, index) => (
+              <div
+                key={index}
+                className='w-[46px] h-10 flex items-center justify-center font-bold text-[36px] relative'
+              >
+                {digit}
+                {question.operation === ArithmaticOperations.SUBTRACTION &&
+                  !!answers.isPrefil &&
+                  idx === 0 &&
+                  formik.values.topAnswer?.[index] !== '#' && (
+                    <div className='absolute inset-0'>
+                      <div className='absolute w-full h-0 border-t-4 border-dotted border-red-700 rotate-45 top-1/2 -translate-y-1/2' />
+                    </div>
+                  )}
+              </div>
+            ))}
         </div>
       ))}
     </div>
@@ -197,7 +211,9 @@ const Grid1Question = ({
                       errors.answerIntermediate[rowIndex] &&
                       (errors.answerIntermediate[rowIndex] as boolean[])[index]
                         ? 'showWrongInput'
-                        : 'showCorrectInput')
+                        : 'showCorrectInput'),
+                    char !== 'B' &&
+                      'border-none !bg-transparent !text-headingTextColor'
                   )}
                 />
               );
@@ -227,7 +243,9 @@ const Grid1Question = ({
               showErrors &&
                 (errors.resultAnswer && errors.resultAnswer[index]
                   ? 'showWrongInput'
-                  : 'showCorrectInput')
+                  : 'showCorrectInput'),
+              answers.answerResult[index] !== 'B' &&
+                'border-none !bg-transparent !text-headingTextColor'
             )}
           />
         </div>
