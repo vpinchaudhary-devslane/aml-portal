@@ -68,8 +68,14 @@ const addGrid1Answer = (
 
   const resultStr = result.toString();
 
+  const isResultCorrect = resultStr === answer.result;
+
+  const hasNoCarryStepsByLearner =
+    isResultCorrect &&
+    question.answers.answerTop?.replace(/B/g, '') === answer.answerTop;
+
   let carryString = '';
-  if (isPrefil) {
+  if (isPrefil && !hasNoCarryStepsByLearner) {
     let carry = 0;
     for (let i = maxLengthTwoNumber - 1; i >= 0; i -= 1) {
       const sum = parseInt(n1Str[i], 10) + parseInt(n2Str[i], 10) + carry;
@@ -87,7 +93,7 @@ const addGrid1Answer = (
             correctAnswer: carryString,
           },
           resultAnswer: {
-            result: resultStr === answer.result,
+            result: isResultCorrect,
             correctAnswer: resultStr,
           },
         },
@@ -95,10 +101,10 @@ const addGrid1Answer = (
   }
 
   return {
-    result: resultStr === answer.result,
+    result: isResultCorrect,
     correctAnswer: {
       resultAnswer: {
-        result: resultStr === answer.result,
+        result: isResultCorrect,
         correctAnswer: resultStr,
       },
     },
@@ -175,7 +181,17 @@ const subGrid1Answer = (
     ? result.toString().padStart(n1Str.length, '0')
     : result.toString();
 
-  if (isPrefil && answerTop !== answer.answerTop?.replace(/#/g, '0'))
+  const isResultCorrect = resultStr === answer.result;
+
+  const hasNoCarryStepsByLearner =
+    isResultCorrect &&
+    question.answers.answerTop?.replace(/B/g, '') === answer.answerTop;
+
+  if (
+    !hasNoCarryStepsByLearner &&
+    isPrefil &&
+    answerTop !== answer.answerTop?.replace(/#/g, '0')
+  )
     return {
       result: false,
       correctAnswer: {
@@ -233,8 +249,13 @@ const multiplicationGrid1Answer = (
   const actualResult = n1 * n2;
 
   const actualResultStr = actualResult.toString();
+  const isResultCorrect = actualResultStr === answer.result;
 
-  if (isIntermediatePrefill) {
+  const learnerHasNoIntermediateStep =
+    isResultCorrect &&
+    question?.answers?.answerIntermediate === answer?.answerIntermediate;
+
+  if (isIntermediatePrefill && !learnerHasNoIntermediateStep) {
     let factor = 1;
     let num2Copy = n2;
 
@@ -518,7 +539,18 @@ const divisionGrid1Answer = (
   const paddedRemainder = remainder.toString().padStart(remainder.length, '0');
   const paddedQuotient = quotient.toString().padStart(quotient.length, '0');
 
-  if (answer.answerIntermediate !== intermediateSteps.join('|'))
+  const isResultCorrect =
+    paddedQuotient === answer.quotient && paddedRemainder === answer.remainder;
+
+  const hasNoIntermediateStepsByLearner =
+    isResultCorrect &&
+    question?.answers?.answerIntermediate?.replace(/#/g, 'B') ===
+      answer?.answerIntermediate;
+
+  if (
+    !hasNoIntermediateStepsByLearner &&
+    answer.answerIntermediate !== intermediateSteps.join('|')
+  )
     return {
       result: false,
       correctAnswer: {
@@ -564,7 +596,7 @@ const divisionGrid1Answer = (
       },
     };
 
-  if (answer.quotient !== quotient.toString().padStart(quotient.length, '0'))
+  if (answer.quotient !== paddedQuotient)
     return {
       result: false,
       correctAnswer: {

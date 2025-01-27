@@ -50,6 +50,8 @@ const Grid1DivisionQuestion = ({
             isFieldAnswerValid('answerQuotient', index, answers) &&
             value === (answers.answerQuotient[index] || '');
 
+          const isPrefilled = answers?.answerQuotient?.[index] !== 'B';
+
           return (
             <div key={`answerQuotient-${index}`}>
               <AmlInput
@@ -64,7 +66,9 @@ const Grid1DivisionQuestion = ({
                   showErrors &&
                     (errors.answerQuotient && errors.answerQuotient[index]
                       ? 'showWrongInput'
-                      : 'showCorrectInput')
+                      : 'showCorrectInput'),
+                  isPrefilled &&
+                    'border-none !bg-transparent !text-headingTextColor'
                 )}
                 disabled={isDisabled}
               />
@@ -101,6 +105,8 @@ const Grid1DivisionQuestion = ({
             );
           }
 
+          const isPrefilled = answers?.answerRemainder?.[index] !== 'B';
+
           return (
             <AmlInput
               key={`answerRemainder-${index}`}
@@ -114,7 +120,9 @@ const Grid1DivisionQuestion = ({
                 showErrors &&
                   (errors.answerRemainder && errors.answerRemainder[index]
                     ? 'showWrongInput'
-                    : 'showCorrectInput')
+                    : 'showCorrectInput'),
+                isPrefilled &&
+                  'border-none !bg-transparent !text-headingTextColor'
               )}
             />
           );
@@ -189,7 +197,9 @@ const Grid1DivisionQuestion = ({
               onChange={formik.handleChange}
               className={cn(
                 showErrors &&
-                  (isInputIncorrect ? 'showWrongInput' : 'showCorrectInput')
+                  (isInputIncorrect ? 'showWrongInput' : 'showCorrectInput'),
+                !isEditable &&
+                  'border-none !bg-transparent !text-headingTextColor'
               )}
               disabled={!isEditable}
             />
